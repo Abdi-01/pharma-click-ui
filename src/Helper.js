@@ -1,5 +1,5 @@
 // URL
-export const URL_API = `http://localhost:2010`;
+export const URL_API = `http://purwadhikafs3.com:2010`;
 
 // USER CONTROLLER
 export const LOGIN_SUCCES = "LOGIN_SUCCESS";
