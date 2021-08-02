@@ -1,7 +1,7 @@
 .product-detail p {
   font-weight: 300;
   text-align: justify;
-  font-size: calc(4px + 1vmin);
+  font-size: calc(7px + 1vmin);
 }
 
 .product-detail h5 {
@@ -12,7 +12,7 @@
 
 .list-usage ul li {
   font-weight: 300;
-  font-size: calc(4px + 1vmin);
+  font-size: calc(7px + 1vmin);
   text-align: justify;
 }
 .more-product {

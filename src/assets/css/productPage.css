@@ -10,14 +10,14 @@
   transition: width 5s;
 }
 
-.product .title-products {
-  font-size: calc(4px + 1vmin);
-}
-
 .price-products {
   font-size: calc(5px + 1vmin);
   font-weight: 900;
   color: rgb(26, 152, 253);
+}
+
+.title-products {
+  word-break: break-all;
 }
 
 .card-banner {

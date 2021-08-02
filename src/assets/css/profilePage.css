@@ -295,11 +295,11 @@
 
 .btn-address .btn-edit {
   cursor: pointer;
-  padding-block: 6px;
-  padding-inline: 15%;
+  padding-block: 1%;
+  padding-inline: 5%;
   border-radius: 10px;
   text-decoration: none;
-  font-size: calc(5px + 1vmin);
+  font-size: calc(4px + 1vmin);
   background: linear-gradient(
     90deg,
     rgba(89, 178, 254, 1) 6%,
@@ -318,12 +318,44 @@
 
 .btn-address .btn-edit:hover {
   cursor: pointer;
-  padding-block: 6px;
-  padding-inline: 15%;
+  padding-block: 1%;
+  padding-inline: 5%;
   border-radius: 10px;
   color: white;
   text-decoration: none;
-  font-size: calc(5px + 1vmin);
+  font-size: calc(4px + 1vmin);
+
+  box-shadow: inset 500px 0 0 0 #288f94;
+}
+
+.btn-address .btn-set-default {
+  margin-left: 10px;
+  cursor: pointer;
+  padding-block: 1%;
+  padding-inline: 5%;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: calc(4px + 1vmin);
+  background: #288f94;
+  transition: ease-out 1s;
+  box-shadow: inset 0 0 0 0
+    linear-gradient(
+      90deg,
+      rgba(131, 58, 180, 1) 0%,
+      rgba(29, 41, 253, 1) 50%,
+      rgba(69, 205, 252, 1) 100%
+    );
+  outline: none;
+}
+
+.btn-address .btn-set-default:hover {
+  cursor: pointer;
+  padding-block: 1%;
+  padding-inline: 5%;
+  border-radius: 10px;
+  color: white;
+  text-decoration: none;
+  font-size: calc(4px + 1vmin);
 
   box-shadow: inset 500px 0 0 0 #288f94;
 }
@@ -331,11 +363,11 @@
 .btn-address .btn-delete {
   cursor: pointer;
   margin-left: 10px;
-  padding-block: 6px;
-  padding-inline: 15%;
+  padding-block: 1%;
+  padding-inline: 5%;
   border-radius: 10px;
   text-decoration: none;
-  font-size: calc(5px + 1vmin);
+  font-size: calc(4px + 1vmin);
   background: #e90000;
   transition: ease-out 1s;
   box-shadow: inset 0 0 0 0
@@ -351,12 +383,12 @@
 .btn-address .btn-delete:hover {
   cursor: pointer;
   margin-left: 10px;
-  padding-block: 6px;
-  padding-inline: 15%;
+  padding-block: 1%;
+  padding-inline: 5%;
   border-radius: 10px;
   color: white;
   text-decoration: none;
-  font-size: calc(5px + 1vmin);
+  font-size: calc(4px + 1vmin);
 
   box-shadow: inset 500px 0 0 0 rgba(163, 0, 0, 1);
 }

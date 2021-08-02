@@ -11,3 +11,10 @@ export const GET_DATA_CITY = "GET_DATA_CITY";
 
 // PRODUCT CONTROLLER
 export const GET_PRODUCT = "GET_PRODUCT";
+
+//GET TOKEN
+export const headers = {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+  },
+};

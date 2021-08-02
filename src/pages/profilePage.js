@@ -20,6 +20,7 @@ import {
   faCamera,
   faPlus,
   faUser,
+  faHistory,
   faKey,
   faTimes,
 } from "@fortawesome/free-solid-svg-icons";
@@ -27,6 +28,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../assets/css/profilePage.css";
 import Profile from "../assets/images/profile.png";
 import ProfileComp from "../components/user/profileComp";
+import TransactionPage from "./TransactionPage";
 
 class ProfilePage extends React.Component {
   constructor(props) {
@@ -60,7 +62,6 @@ class ProfilePage extends React.Component {
   }
 
   render() {
-    console.log("address", this.props.address);
     return (
       <Container className="mt-5">
         <Row>
@@ -105,6 +106,23 @@ class ProfilePage extends React.Component {
                           <span className="title">Security</span>
                         </a>
                       </li>
+                      <li class="list">
+                        <b></b>
+                        <b></b>
+                        <a
+                          href="#"
+                          onClick={() => {
+                            this.setState({
+                              indexActive: 3,
+                            });
+                          }}
+                        >
+                          <span className="icon">
+                            <FontAwesomeIcon icon={faHistory} />
+                          </span>
+                          <span className="title">Transaction</span>
+                        </a>
+                      </li>
                     </ul>
                   </div>
                 </Col>
@@ -117,8 +135,12 @@ class ProfilePage extends React.Component {
             <>
               <ProfileComp />
             </>
-          ) : (
+          ) : this.state.indexActive === 2 ? (
             <></>
+          ) : (
+            <>
+              <TransactionPage />
+            </>
           )}
         </Row>
       </Container>

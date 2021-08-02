@@ -29,18 +29,16 @@ import {
   faShoppingCart,
 } from "@fortawesome/free-solid-svg-icons";
 import Slider from "react-slick";
-import "../assets/css/productPage.css"
+import "../assets/css/productPage.css";
 // import "../assets/css/navogation.css"
 import { Carousel } from "react-responsive-carousel";
-import BannerProduct from "../assets/images/bannerProduct.gif"
+import BannerProduct from "../assets/images/bannerProduct.gif";
 import { connect } from "react-redux";
-import { getProductAction } from '../action'
+import { getProductAction, keepLogin } from "../action";
 import { Link } from "react-router-dom";
-// import Product1 from "../assets/images/product1.jpg";
-// import Product2 from "../assets/images/product2.jpg";
-// import Product3 from "../assets/images/product3.jpg";
-// import Product5 from "../assets/images/product5.jpg";
-// import Product6 from "../assets/images/product6.jpg";
+import HTTP from "../service/HTTP";
+import axios from "axios";
+import { URL_API } from "../Helper";
 
 var settings = {
   dots: true,
@@ -96,125 +94,55 @@ var settings = {
   ],
 };
 
-var product = [
-  {
-    nama: "sanmol",
-    img: 'Product1',
-    harga: 50000,
-  },
-  {
-    nama: "Paracetamol",
-    img: 'Product2',
-    harga: 45000,
-  },
-  {
-    nama: "Pamol",
-    img: 'Product3',
-    harga: 15000,
-  },
-  {
-    nama: "Interpec",
-    img: 'Product5',
-    harga: 70000,
-  },
-  {
-    nama: "Alcoplus",
-    img: 'Product6',
-    harga: 35000,
-  },
-  {
-    nama: "Alcoplus",
-    img: 'Product6',
-    harga: 25000,
-  },
-  {
-    nama: "sanmol",
-    img: 'Product1',
-    harga: 50000,
-  },
-  {
-    nama: "Paracetamol",
-    img: 'Product2',
-    harga: 45000,
-  },
-  {
-    nama: "Pamol",
-    img: 'Product3',
-    harga: 15000,
-  },
-  {
-    nama: "Interpec",
-    img: 'Product5',
-    harga: 70000,
-  },
-  {
-    nama: "Alcoplus",
-    img: 'Product6',
-    harga: 35000,
-  },
-  {
-    nama: "Alcoplus",
-    img: '',
-    harga: 25000,
-  },
-  {
-    nama: "sanmol",
-    img: 'Product1',
-    harga: 50000,
-  },
-  {
-    nama: "Paracetamol",
-    img: 'Product2',
-    harga: 45000,
-  },
-  {
-    nama: "Pamol",
-    img: 'Product3',
-    harga: 15000,
-  },
-  {
-    nama: "Interpec",
-    img: 'Product',
-    harga: 70000,
-  },
-  {
-    nama: "Alcoplus",
-    img: 'Product6',
-    harga: 35000,
-  },
-  {
-    nama: "Alcoplus",
-    img: 'Product6',
-    harga: 25000,
-  },
-];
-
 var category = [
   {
     nama: "Covid",
-    img: 'Product6',
+    id: 1,
   },
   {
     nama: "Mata",
-    img: 'Product6',
+    id: 2,
   },
   {
-    nama: "Batuk",
-    img: 'Product6',
+    nama: "Flu dan Batuk",
+    id: 3,
   },
   {
-    nama: "Flu",
-    img: 'Product6',
+    nama: "Vitamnin dan Suplemen",
+    id: 4,
   },
   {
     nama: "Demam",
-    img: 'Product6',
+    id: 5,
   },
   {
-    nama: "Asma",
-    img: ' Product6',
+    nama: "Pencernaan",
+    id: 6,
+  },
+  {
+    nama: "Hipertensi",
+    id: 7,
+  },
+  {
+    nama: "Otot, tulang dan sendi",
+    id: 8,
+  },
+  {
+    nama: "Kulit",
+    id: 9,
+  },
+  {
+    nama: "P3K",
+    id: 10,
   },
 ];
+
+let defaultSearchFilter = {
+  idCategory: null,
+  sortBy: "",
+  minRange: 0,
+  maxRange: "",
+};
 
 class ProductPage extends React.Component {
   constructor(props) {
@@ -225,23 +153,23 @@ class ProductPage extends React.Component {
       currentPage: 1,
       todosPerPage: 16,
       modal: false,
-      modalProtection: false
+      modalProtection: false,
+      searchFilter: [],
     };
-    this.handleClick = this.handleClick.bind(this);
   }
 
   componentDidMount() {
-    let list = document.querySelectorAll(`.list`);
-    for (let i = 0; i < list.length; i++) {
-      list[i].onclick = function () {
-        let j = 0;
-        while (j < list.length) {
-          list[j++].className = "list";
-        }
-        list[i].className = "list active";
-      };
-    }
-    this.props.getProductAction(1)
+    // let list = document.querySelectorAll(`.list`);
+    // for (let i = 0; i < list.length; i++) {
+    //   list[i].onclick = function () {
+    //     let j = 0;
+    //     while (j < list.length) {
+    //       list[j++].className = "list";
+    //     }
+    //     list[i].className = "list active";
+    //   };
+    // }
+    this.props.getProductAction(1);
   }
 
   handleClick(event) {
@@ -250,6 +178,48 @@ class ProductPage extends React.Component {
     });
   }
 
+  handleSearch = (search) => {
+    this.setState({ search });
+  };
+
+  onBtnSearch = () => {
+    this.props.getProductAction(1, `?product_name=%${this.state.search}%`);
+  };
+
+  onBtnSubmit = () => {
+    // value input ==> simpan di state
+    let { idCategory, sortBy, minRange, maxRange } = this.state.searchFilter;
+
+    let query = [];
+
+    if (idCategory) query.push(`idcategory=${idCategory}`);
+    if (sortBy) query.push(`sort=${sortBy}`);
+    if (maxRange) {
+      if (!minRange) minRange = 0;
+      query.push(`pack_price=${minRange}[and]${maxRange}`);
+    }
+
+    this.props.getProductAction(1, `?${query.join("&")}`);
+  };
+
+  onBtnReset = () => {
+    this.setState({
+      searchFilter: {
+        ...defaultSearchFilter,
+      },
+      search: "",
+    });
+    this.props.getProductAction(1);
+  };
+
+  setSearchFilter = (key, value) => {
+    this.setState({
+      searchFilter: {
+        ...this.state.searchFilter,
+        [key]: value,
+      },
+    });
+  };
   printFilterAll = () => {
     return (
       <>
@@ -271,15 +241,36 @@ class ProductPage extends React.Component {
               <Col md="12 mt-3" className="category-title">
                 <Form>
                   <FormGroup row>
-                    <Label for="checkbox2" xl={12}>
-                      Category
-                    </Label>
+                    <div style={{ width: "13%", display: "flex" }}>
+                      <Label for="checkbox2" xl={12}>
+                        Category
+                      </Label>
+                      <Button
+                        outline
+                        color="secondary"
+                        size="sm"
+                        onClick={this.onBtnReset}
+                      >
+                        Reset
+                      </Button>
+                    </div>
+
                     <Col xl={{ size: 12 }}>
-                      {category.map((item) => {
+                      {category.map((item, index) => {
                         return (
                           <FormGroup check>
                             <Label check>
-                              <Input type="radio" name="radio2" />
+                              <Input
+                                checked={
+                                  item.id === this.state.searchFilter.idCategory
+                                }
+                                type="radio"
+                                name="radio2"
+                                value={item.nama}
+                                onChange={() =>
+                                  this.setSearchFilter("idCategory", item.id)
+                                }
+                              />
                               {item.nama}
                             </Label>
                           </FormGroup>
@@ -301,11 +292,15 @@ class ProductPage extends React.Component {
                       <div className="d-flex justify-content-center align-items-center">
                         <div>
                           <Input
-                            type="text"
+                            type="number"
                             name="min"
                             placeholder="Minimum"
                             className="p-1"
                             style={{ fontSize: "13px" }}
+                            value={this.state.searchFilter.minRange}
+                            onChange={(e) =>
+                              this.setSearchFilter("minRange", e.target.value)
+                            }
                           />
                         </div>
                         <div>
@@ -313,11 +308,15 @@ class ProductPage extends React.Component {
                         </div>
                         <div>
                           <Input
-                            type="text"
+                            type="number"
                             name="maks"
                             placeholder="Maximum "
                             className="p-1"
                             style={{ fontSize: "13px" }}
+                            value={this.state.searchFilter.maxRange}
+                            onChange={(e) =>
+                              this.setSearchFilter("maxRange", e.target.value)
+                            }
                           />
                         </div>
                       </div>
@@ -342,10 +341,52 @@ class ProductPage extends React.Component {
                           name="select"
                           id="exampleSelect"
                           style={{ fontSize: "13px" }}
+                          onChange={(e) =>
+                            this.setSearchFilter("sortBy", e.target.value)
+                          }
                         >
-                          <option>-</option>
-                          <option>Highest Price</option>
-                          <option>Lowest Price</option>
+                          <option
+                            value=""
+                            selected={this.state.searchFilter.sortBy === ""}
+                          >
+                            -
+                          </option>
+                          <option
+                            value="pack_price:desc"
+                            selected={
+                              this.state.searchFilter.sortBy ===
+                              "pack_price:desc"
+                            }
+                          >
+                            Highest Price
+                          </option>
+                          <option
+                            value="pack_price:asc"
+                            selected={
+                              this.state.searchFilter.sortBy ===
+                              "pack_price:asc"
+                            }
+                          >
+                            Lowest Price
+                          </option>
+                          <option
+                            value="product_name:asc"
+                            selected={
+                              this.state.searchFilter.sortBy ===
+                              "product_name:asc"
+                            }
+                          >
+                            A-Z
+                          </option>
+                          <option
+                            value="product_name:desc"
+                            selected={
+                              this.state.searchFilter.sortBy ===
+                              "product_name:desc"
+                            }
+                          >
+                            Z-A
+                          </option>
                         </Input>
                       </FormGroup>
                     </Col>
@@ -354,7 +395,12 @@ class ProductPage extends React.Component {
               </Col>
 
               <Col md="12 submit mt-3">
-                <a style={{ color: "white" }}>Submit</a>
+                <a
+                  style={{ color: "white", cursor: "pointer" }}
+                  onClick={this.onBtnSubmit}
+                >
+                  Submit
+                </a>
               </Col>
             </Row>
           </Container>
@@ -364,7 +410,7 @@ class ProductPage extends React.Component {
   };
 
   printFilter = () => {
-    // MOBILE VIEW
+    // MOBILE VIEW --> filter untuk mobile view
     return (
       <>
         <Modal
@@ -409,15 +455,40 @@ class ProductPage extends React.Component {
                       <Col md="12 mt-3" className="category-title">
                         <Form>
                           <FormGroup row>
-                            <Label for="checkbox2" xl={12}>
-                              Category
-                            </Label>
+                            <div style={{ width: "13%", display: "flex" }}>
+                              <Label for="checkbox2" xl={12}>
+                                Category
+                              </Label>
+                              <Button
+                                outline
+                                color="secondary"
+                                size="sm"
+                                onClick={this.onBtnReset}
+                              >
+                                Reset
+                              </Button>
+                            </div>
+
                             <Col xl={{ size: 12 }}>
-                              {category.map((item) => {
+                              {category.map((item, index) => {
                                 return (
                                   <FormGroup check>
                                     <Label check>
-                                      <Input type="radio" name="radio2" />
+                                      <Input
+                                        checked={
+                                          item.id ===
+                                          this.state.searchFilter.idCategory
+                                        }
+                                        type="radio"
+                                        name="radio2"
+                                        value={item.nama}
+                                        onChange={() =>
+                                          this.setSearchFilter(
+                                            "idCategory",
+                                            item.id
+                                          )
+                                        }
+                                      />
                                       {item.nama}
                                     </Label>
                                   </FormGroup>
@@ -444,6 +515,13 @@ class ProductPage extends React.Component {
                                     placeholder="Minimum"
                                     className="p-1"
                                     style={{ fontSize: "calc(5px + 1vmin)" }}
+                                    value={this.state.searchFilter.minRange}
+                                    onChange={(e) =>
+                                      this.setSearchFilter(
+                                        "minRange",
+                                        e.target.value
+                                      )
+                                    }
                                   />
                                 </div>
                                 <div>
@@ -456,6 +534,13 @@ class ProductPage extends React.Component {
                                     placeholder="Maksimum "
                                     className="p-1"
                                     style={{ fontSize: "calc(5px + 1vmin)" }}
+                                    value={this.state.searchFilter.maxRange}
+                                    onChange={(e) =>
+                                      this.setSearchFilter(
+                                        "maxRange",
+                                        e.target.value
+                                      )
+                                    }
                                   />
                                 </div>
                               </div>
@@ -480,10 +565,57 @@ class ProductPage extends React.Component {
                                   name="select"
                                   id="exampleSelect"
                                   style={{ fontSize: "13px" }}
+                                  onChange={(e) =>
+                                    this.setSearchFilter(
+                                      "sortBy",
+                                      e.target.value
+                                    )
+                                  }
                                 >
-                                  <option>-</option>
-                                  <option>Harga Tertinggi</option>
-                                  <option>Harga Terendah</option>
+                                  <option
+                                    value=""
+                                    selected={
+                                      this.state.searchFilter.sortBy === ""
+                                    }
+                                  >
+                                    -
+                                  </option>
+                                  <option
+                                    value="pack_price:desc"
+                                    selected={
+                                      this.state.searchFilter.sortBy ===
+                                      "pack_price:desc"
+                                    }
+                                  >
+                                    Highest Price
+                                  </option>
+                                  <option
+                                    value="pack_price:asc"
+                                    selected={
+                                      this.state.searchFilter.sortBy ===
+                                      "pack_price:asc"
+                                    }
+                                  >
+                                    Lowest Price
+                                  </option>
+                                  <option
+                                    value="product_name:asc"
+                                    selected={
+                                      this.state.searchFilter.sortBy ===
+                                      "product_name:asc"
+                                    }
+                                  >
+                                    A-Z
+                                  </option>
+                                  <option
+                                    value="product_name:desc"
+                                    selected={
+                                      this.state.searchFilter.sortBy ===
+                                      "product_name:desc"
+                                    }
+                                  >
+                                    Z-A
+                                  </option>
                                 </Input>
                               </FormGroup>
                             </Col>
@@ -492,7 +624,12 @@ class ProductPage extends React.Component {
                       </Col>
 
                       <Col md="12 submit mt-3">
-                        <a style={{ color: "white" }}>Submit</a>
+                        <a
+                          style={{ color: "white" }}
+                          onClick={this.onBtnSubmit}
+                        >
+                          Submit
+                        </a>
                       </Col>
                     </Row>
                   </Container>
@@ -505,26 +642,57 @@ class ProductPage extends React.Component {
     );
   };
 
-  onAddCart = () => {
+  onAddCart = (id, netto, price_pack, name) => {
     if (!this.props.iduser) {
-      this.setState({ modalProtection: !this.modalProtection })
-
+      this.setState({ modalProtection: !this.modalProtection });
     } else {
+      let iduser = this.props.iduser;
+      let product_name = name;
+      let idproduct = id;
+      let qty = 1;
+      let total_netto = qty * netto;
+      let price = parseInt(price_pack);
+
       // fungsi add to cart
+      axios
+        .post(URL_API + `/product/add-to-cart`, {
+          iduser: iduser,
+          idproduct: idproduct,
+          qty: qty,
+          total_netto: total_netto,
+          price: price,
+          product_name: product_name,
+        })
+        .then((res) => {
+          let token = localStorage.getItem("tkn_id");
+          this.props.keepLogin(token);
+          // alert(`${res.data}`);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
-  }
+  };
   render() {
     const { currentPage, todosPerPage } = this.state;
     // Logic for displaying todos
     const indexOfLastTodo = currentPage * todosPerPage;
     const indexOfFirstTodo = indexOfLastTodo - todosPerPage;
-    const currentTodos = this.props.product.slice(indexOfFirstTodo, indexOfLastTodo);
+    const currentTodos = this.props.product.slice(
+      indexOfFirstTodo,
+      indexOfLastTodo
+    );
 
     // Logic for displaying page numbers
     const pageNumbers = [];
-    for (let i = 1; i <= Math.ceil(product.length / todosPerPage); i++) {
+    for (
+      let i = 1;
+      i <= Math.ceil(this.props.product.length / todosPerPage);
+      i++
+    ) {
       pageNumbers.push(i);
     }
+    // console.log("currentTodos", currentTodos);
     return (
       <Container fluid className="mt-5">
         <Row>
@@ -604,15 +772,18 @@ class ProductPage extends React.Component {
                   <div>
                     <div class="input-group">
                       <div class="form-outline">
-                        <input
+                        <Input
                           type="search"
                           id="form1"
                           class="form-control p-1"
+                          value={this.state.search}
+                          onChange={(e) => this.handleSearch(e.target.value)}
                         />
                       </div>
                       <Button
                         color="primary "
                         style={{ paddingInline: "12px", paddingBlock: "0px" }}
+                        onClick={this.onBtnSearch}
                       >
                         <FontAwesomeIcon icon={faSearch} />
                       </Button>
@@ -666,27 +837,42 @@ class ProductPage extends React.Component {
                           <FontAwesomeIcon
                             icon={faShoppingCart}
                             className="icon-product"
-                            onClick={this.onAddCart}
+                            onClick={() => {
+                              this.onAddCart(
+                                item.idproduct,
+                                item.netto,
+                                item.pack_price,
+                                item.product_name
+                              );
+                            }}
                           />
                           <span>Add to cart</span>
                         </li>
                       </ul>
-                      <CardBody className="p-2 d-flex flex-column">
-                        <img
-                          top
-                          width="100%"
-                          height="auto"
-                          src={item.images[0]}
-                          alt="sanmol"
-                          className="img-fluid "
-                        />
-                        <CardTitle className="title-products p-0">
-                          {item.product_name}
-                        </CardTitle>
-                        <CardSubtitle className="mb-2 price-products">
-                          Rp {item.pack_price}
-                        </CardSubtitle>
-                      </CardBody>
+                      <Link
+                        to={`/detail?product=${item.product_name.replace(
+                          /\s/g,
+                          "-"
+                        )}-${item.idproduct}`}
+                        style={{ textDecoration: "none", color: "black" }}
+                      >
+                        <CardBody className="p-2 d-flex flex-column">
+                          <img
+                            top
+                            width="100%"
+                            height="auto"
+                            src={item.images}
+                            alt={item.product_name}
+                            className="img-fluid "
+                          />
+                          <CardTitle className="title-products p-0">
+                            {item.product_name}
+                          </CardTitle>
+                          <CardSubtitle className="mb-2 price-products">
+                            Rp. {item.pack_price.toLocaleString()}
+                          </CardSubtitle>
+                        </CardBody>
+                      </Link>
                     </Card>
                   </Col>
                 ))}
@@ -724,16 +910,35 @@ class ProductPage extends React.Component {
           </Col>
         </Row>
 
-        <Modal isOpen={this.state.modalProtection} toggle={() => this.setState({ modalProtection: !this.state.modalProtection })}>
+        <Modal
+          isOpen={this.state.modalProtection}
+          toggle={() =>
+            this.setState({ modalProtection: !this.state.modalProtection })
+          }
+        >
           <ModalHeader>Cannot do transaction!</ModalHeader>
-          <ModalBody>
-            To continue transaction please login!
-          </ModalBody>
+          <ModalBody>To continue transaction please login!</ModalBody>
           <ModalFooter>
             <Link to="/login">
-              <Button color="primary" onClick={() => this.setState({ modalProtection: !this.state.modalProtection })}>Login</Button>{' '}
+              <Button
+                color="primary"
+                onClick={() =>
+                  this.setState({
+                    modalProtection: !this.state.modalProtection,
+                  })
+                }
+              >
+                Login
+              </Button>{" "}
             </Link>
-            <Button color="secondary" onClick={() => this.setState({ modalProtection: !this.state.modalProtection })}>Cancel</Button>
+            <Button
+              color="secondary"
+              onClick={() =>
+                this.setState({ modalProtection: !this.state.modalProtection })
+              }
+            >
+              Cancel
+            </Button>
           </ModalFooter>
         </Modal>
       </Container>
@@ -743,7 +948,10 @@ class ProductPage extends React.Component {
 
 const mapStateToProps = ({ productReducer, authReducer }) => {
   return {
-    product: productReducer.product_list, iduser: authReducer.id
-  }
-}
-export default connect(mapStateToProps, { getProductAction })(ProductPage);
+    product: productReducer.product_list,
+    iduser: authReducer.iduser,
+  };
+};
+export default connect(mapStateToProps, { getProductAction, keepLogin })(
+  ProductPage
+);

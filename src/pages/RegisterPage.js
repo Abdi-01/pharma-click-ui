@@ -22,6 +22,7 @@ class RegisterPage extends React.Component {
       nama: "",
       loading: false,
       invalid: [],
+      confPassword: ""
     };
   }
 
@@ -120,7 +121,7 @@ class RegisterPage extends React.Component {
       "i",
       "g"
     );
-    let { nama, username, email, password, invalid } = this.state;
+    let { nama, username, email, password, invalid, confPassword } = this.state;
     return (
       <div
         className="container-fluid mt-5"
@@ -247,7 +248,7 @@ class RegisterPage extends React.Component {
                   />
                   {email ? (
                     email.match(/(\.com|\.co|\.id)/gi) &&
-                    email.includes("@") ? (
+                      email.includes("@") ? (
                       <small style={{ fontSize: "10px", color: "green" }}>
                         Email valid!
                       </small>
@@ -264,7 +265,7 @@ class RegisterPage extends React.Component {
                 </div>
               </div>
               <div className="p-fluid row">
-                <div>
+                <div className="col-sm-12 col-md-6">
                   <label className="p-d-block">Password</label>
                   <Password
                     value={password}
@@ -296,6 +297,40 @@ class RegisterPage extends React.Component {
                   ) : (
                     <small style={{ fontSize: "10px" }}>
                       Enter your password.
+                    </small>
+                  )}
+                </div>
+                <div className="col-sm-12 col-md-6">
+                  <label className="p-d-block">Confirmation Password</label>
+                  <Password
+                    value={confPassword}
+                    onChange={(e) =>
+                      this.setState({ confPassword: e.target.value })
+                    }
+                    feedback={false}
+                    toggleMask
+                    className="p-password-meter-info-sm"
+                    inputStyle={{
+                      border: confPassword 
+                        ? password == confPassword 
+                          ? "1px solid black"
+                          : "1px solid red"
+                        : "1px solid black",
+                    }}
+                  />
+                  {confPassword ? (
+                    password == confPassword ? (
+                      <small style={{ fontSize: "10px", color: "green" }}>
+                        Password match
+                      </small>
+                    ) : (
+                      <small style={{ fontSize: "10px", color: "red" }}>
+                        Password not match
+                      </small>
+                    )
+                  ) : (
+                    <small style={{ fontSize: "10px" }}>
+                      Confirm your password.
                     </small>
                   )}
                 </div>

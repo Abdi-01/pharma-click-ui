@@ -15,6 +15,7 @@ import { URL_API } from '../Helper';
 import { Dropdown } from 'primereact/dropdown';
 import { connect } from 'react-redux';
 import { getProductAction } from '../action'
+import HTTP from '../service/HTTP';
 class DialogProduct extends React.Component {
     constructor(props) {
         super(props);
@@ -82,7 +83,7 @@ class DialogProduct extends React.Component {
                 formData.append('products', this.state.fileUpload)
 
                 this.setState({loading: true})
-                let edit = await axios.patch(URL_API + '/product/edit', formData)
+                let edit = await HTTP.patch('/product', formData)
                 console.log(edit.data)
                 this.setState({fileUpload: '', loading: false})
                 this.props.getProductAction(1)

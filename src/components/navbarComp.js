@@ -1,6 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import {
+  Container,
+  Row,
+  Col,
   Collapse,
   Navbar,
   NavbarToggler,
@@ -22,6 +25,7 @@ import Profile from "../assets/images/profile.png";
 import { connect } from "react-redux";
 import { authLogout, getImageProfileUser } from "../action";
 import axios from "axios";
+import CartEmpty from "../assets/images/emptyCart.jpg";
 import { URL_API } from "../Helper";
 
 class NavbarComp extends React.Component {
@@ -33,13 +37,23 @@ class NavbarComp extends React.Component {
   componentDidMount() {
     setTimeout(() => {
       this.getAnImages();
-    }, 1500);
+    }, 800);
 
+    let list = document.querySelectorAll(`.menu-item`);
+    for (let i = 0; i < list.length; i++) {
+      list[i].onclick = function () {
+        let j = 0;
+        while (j < list.length) {
+          list[j++].className = "menu-item";
+        }
+        list[i].className = "menu-item active";
+      };
+    }
     // this.props.getImageProfileUser(this.props.user.iduser);
   }
 
-  getAnImages = () => {
-    axios
+  getAnImages =  () => {
+     axios
       .get(URL_API + `/user/get-image-user?iduser=${this.props.user.iduser}`)
       .then((res) => {
         if (res.data.image_url.length > 0) {
@@ -52,9 +66,49 @@ class NavbarComp extends React.Component {
       });
   };
 
-
   btLogout = () => {
     this.props.authLogout();
+  };
+
+  cekQtyCart = () => {
+    return this.props.user.cart.reduce((a, v) => (a = a + v.qty), 0);
+  };
+
+  printCart = () => {
+    return this.props.user.cart.length < 0 ? (
+      <DropdownItem>Cart is Empty</DropdownItem>
+    ) : (
+      this.props.user.cart.map((item, index) => {
+        return (
+          // <DropdownItem style={{ width: 400 }}>
+          <Container style={{ width: 300 }}>
+            <Row>
+              <Col md="4">
+                <img src={item.image_url} width="80%" />
+              </Col>
+              <Col md="8">
+                <p
+                  style={{
+                    marginBottom: 0,
+                    fontSize: "0.9em",
+                  }}
+                >
+                  <strong>{item.product_name}</strong>
+                </p>
+                <p style={{ marginBottom: 0, fontSize: "0.8em" }}>
+                  Qty : {item.qty}
+                </p>
+                <p style={{ marginBottom: 0, fontSize: "0.8em" }}>
+                  Rp. {item.price.toLocaleString()}
+                </p>
+              </Col>
+              {/* <hr style={{ border: "2px solid #288F94", marginTop: "15px" }} /> */}
+            </Row>
+          </Container>
+          // </DropdownItem>
+        );
+      })
+    );
   };
 
   render() {
@@ -82,14 +136,14 @@ class NavbarComp extends React.Component {
               <NavItem>
                 <Link to="/" style={{ textDecoration: "none" }}>
                   <NavLink>
-                    <a className="menu-item">Home</a>
+                    <a className="menu-item active">Home</a>
                   </NavLink>
                 </Link>
               </NavItem>
               <NavItem>
                 <NavLink>
-                  <Link className="menu-item" to="/product">
-                    Product
+                  <Link to="/product">
+                    <a className="menu-item">Products</a>
                   </Link>
                 </NavLink>
               </NavItem>
@@ -100,11 +154,18 @@ class NavbarComp extends React.Component {
                   </NavLink>
                 </Link>
               </NavItem>
+              <NavItem>
+                <Link to="/custom">
+                  <NavLink>
+                    <a className="menu-item">Custom Order</a>
+                  </NavLink>
+                </Link>
+              </NavItem>
             </Nav>
             {this.props.user.role === "user" ? (
               <div className="d-flex justify-content-end align-items-center drop-menu">
                 <NavItem type="none">
-                  <UncontrolledDropdown nav inNavbar>
+                  <UncontrolledDropdown nav>
                     <DropdownToggle nav>
                       <NavLink href="#">
                         <FontAwesomeIcon icon={faShoppingCart} />
@@ -112,25 +173,52 @@ class NavbarComp extends React.Component {
                           class="badge bg-primary rounded-pill"
                           style={{ color: "white" }}
                         >
-                          {/* {this.props.cart.length} */}
+                          {this.cekQtyCart()}
                         </span>
                       </NavLink>
                     </DropdownToggle>
-                    <DropdownMenu right>
-                      isi print cart
-                      <DropdownItem divider />
-                      <DropdownItem>
-                        <Link
-                          to="/cart"
-                          style={{
-                            fontSize: "calc(5px + 1vmin)",
-                            textDecoration: "none",
-                            color: "black",
-                          }}
-                        >
-                          Go To Cart
-                        </Link>
-                      </DropdownItem>
+                    <DropdownMenu>
+                      {this.props.user.cart.length > 0 ? (
+                        <>
+                          {this.printCart()}
+                          <DropdownItem divider />
+                          <DropdownItem>
+                            <Link
+                              to="/cart"
+                              style={{
+                                fontSize: "calc(5px + 1vmin)",
+                                textDecoration: "none",
+                                color: "black",
+                                cursor: "pointer",
+                              }}
+                            >
+                              Go To Cart
+                            </Link>
+                          </DropdownItem>
+                        </>
+                      ) : (
+                        <>
+                          <Container>
+                            <Row>
+                              <center>
+                                <Col md="12">
+                                  <img
+                                    src={CartEmpty}
+                                    alt="cart empty"
+                                    width="50%"
+                                  />
+                                </Col>
+                                <Col
+                                  md="12 mt-2"
+                                  style={{ fontWeight: 900, fontSize: "0.8em" }}
+                                >
+                                  Your Cart is Empty
+                                </Col>
+                              </center>
+                            </Row>
+                          </Container>
+                        </>
+                      )}
                     </DropdownMenu>
                   </UncontrolledDropdown>
                 </NavItem>
@@ -151,7 +239,13 @@ class NavbarComp extends React.Component {
                       <DropdownItem>Edit Profile</DropdownItem>
                     </Link>
                     <DropdownItem>Change Password</DropdownItem>
-                    <DropdownItem onClick={this.btLogout}>Logout</DropdownItem>
+                    <Link
+                      to="/"
+                      style={{ textDecoration: "none" }}
+                      onClick={this.btLogout}
+                    >
+                      <DropdownItem>Logout</DropdownItem>
+                    </Link>
                   </DropdownMenu>
                 </UncontrolledDropdown>
               </div>
@@ -180,13 +274,13 @@ class NavbarComp extends React.Component {
                 <div className="d-flex regist">
                   <NavbarText className="mr-3">
                     <Link to="/login" style={{ textDecoration: "none" }}>
-                      <a>Login</a>
+                      <a className="menu-item">Login</a>
                     </Link>
                   </NavbarText>
                   &nbsp;
                   <NavbarText>
                     <Link to="/register" style={{ textDecoration: "none" }}>
-                      <a>Register</a>
+                      <a className="menu-item">Register</a>
                     </Link>
                   </NavbarText>
                   &nbsp;

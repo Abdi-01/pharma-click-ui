@@ -103,39 +103,6 @@ var settings = {
   ],
 };
 
-var product = [
-  {
-    nama: "sanmol",
-    img: Product1,
-    harga: 50000,
-  },
-  {
-    nama: "Paracetamol",
-    img: Product2,
-    harga: 45000,
-  },
-  {
-    nama: "Pamol",
-    img: Product3,
-    harga: 15000,
-  },
-  {
-    nama: "Interpec",
-    img: Product5,
-    harga: 70000,
-  },
-  {
-    nama: "Alcoplus",
-    img: Product6,
-    harga: 35000,
-  },
-  {
-    nama: "Alcoplus",
-    img: Product6,
-    harga: 25000,
-  },
-];
-
 var category = [
   {
     nama: "Covid",
@@ -171,40 +138,31 @@ class LandingPage extends React.Component {
   }
 
   componentDidMount() {
-    this.onBtnFilterCategory();
+    setTimeout(() => {
+      this.onBtnFilterCategory()
+    }, 800);
+    
   }
 
   onBtnBrowse = (more) => {
     return this.state.filter.slice(0, more);
   };
 
-  onBtnFilterCategory = (mata) => {
-    if (mata === undefined) {
-      mata = "demam";
-      axios
-        .get(URL_API + `/product/get-products?name=${mata}`)
-        .then((res) => {
-          console.log("data", res.data);
-          this.setState({ filter: res.data });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+  onBtnFilterCategory = (val) => {
+    if (val === undefined) {
+      val = "demam";
+      let result = this.props.products.filter(word => word.category === val);
+      return this.setState({filter:result})
     } else {
-      axios
-        .get(URL_API + `/product/get-products?name=${mata}`)
-        .then((res) => {
-          this.setState({ filter: res.data });
-        })
-        .catch((err) => {
-          console.log(err);
-        });
+      let result = this.props.products.filter(word => word.category === val);
+      return this.setState({filter:result})
     }
   };
 
   render() {
     console.log("products", this.props.products);
     console.log("user", this.props.user);
+    console.log("filter", this.state.filter);
     return (
       <Container fluid className="p-0">
         <Row>
@@ -249,7 +207,7 @@ class LandingPage extends React.Component {
                                 className="card-popular"
                               >
                                 <Link
-                                  to={`/product-detail?id=${item.id}`}
+                                  to={`/detail?product=${item.product_name.replace(/\s/g,"-")}-${item.idproduct}`}
                                   style={{
                                     textDecoration: "none",
                                     color: "black",
@@ -302,7 +260,7 @@ class LandingPage extends React.Component {
                       className="card-service"
                     >
                       <Container>
-                        <Row className="btn-getstarted">
+                        <Row>
                           <Col md="5" id="bottom-content">
                             <CardBody>
                               <CardTitle
@@ -322,6 +280,7 @@ class LandingPage extends React.Component {
                                   textDecoration: "none",
                                   color: "black",
                                 }}
+                                className="btn-getstarted"
                               >
                                 <a className="btn-getstarted">Get Started</a>
                               </Link>
@@ -350,7 +309,7 @@ class LandingPage extends React.Component {
                       className="card-service1"
                     >
                       <Container>
-                        <Row className="btn-getstarted">
+                        <Row>
                           <Col md="5" id="bottom-content">
                             <CardBody>
                               <CardTitle
@@ -369,6 +328,7 @@ class LandingPage extends React.Component {
                                   textDecoration: "none",
                                   color: "black",
                                 }}
+                                className="btn-getstarted"
                               >
                                 <a className="btn-getstarted">Order Now</a>
                               </Link>
@@ -446,7 +406,7 @@ class LandingPage extends React.Component {
             <Row className=" mt-4">
               {this.onBtnBrowse(this.state.more).map((item) => (
                 <>
-                  {item.type === "pack" && (
+                  {item.stock[0].type === "pack" && (
                     <>
                       <Col xl="2" lg="2" md="3" sm="4" xs="4">
                         <Card
@@ -461,13 +421,13 @@ class LandingPage extends React.Component {
                           className="card-medicine"
                         >
                           <Link
-                            to={`/product-detail?idproduct=${item.idproduct}`}
+                            to={`/detail?product=${item.product_name.replace(/\s/g,"-")}-${item.idproduct}`}
                             style={{ textDecoration: "none", color: "black" }}
                           >
                             <img
                               top
                               width="100%"
-                              src={item.image_url}
+                              src={item.images[0]}
                               alt={item.product_name}
                               className="img-fluid p-2"
                               height="auto"
@@ -491,7 +451,7 @@ class LandingPage extends React.Component {
                             </ul>
                             <CardBody className="btn-getstarted">
                               <CardTitle className="title-products">
-                                {item.product_name.length > 30 ? (
+                                {item.product_name.length > 36 ? (
                                   <>{item.product_name.slice(0, 30) + " ..."}</>
                                 ) : (
                                   <>{item.product_name}</>

@@ -6,7 +6,6 @@
   color: black;
   /* text-shadow: 1px 1px 0px #ccc; */
   cursor: pointer;
-  border-radius: 15px;
   padding: 5px;
   text-decoration: none;
   z-index: 2;
@@ -14,7 +13,6 @@
 }
 
 .menu-item:hover {
-  color: white;
   cursor: pointer;
   padding: 5px;
   border-radius: 15px;
@@ -31,6 +29,29 @@
     rgba(87, 142, 145, 1) 58%,
     rgba(118, 179, 180, 1) 95%
   );
+}
+
+.menu-item.active {
+  cursor: pointer;
+  padding: 5px;
+  text-decoration: none;
+  border-bottom: 2px solid rgba(118, 179, 180, 1);
+  /* background: linear-gradient(
+      90deg,
+      rgba(89, 178, 254, 1) 6%,
+      rgba(17, 148, 255, 1) 100%
+    ); */
+  /* background: linear-gradient(
+    90deg,
+    rgba(40, 142, 147, 1) 3%,
+    rgba(34, 129, 133, 1) 41%,
+    rgba(87, 142, 145, 1) 58%,
+    rgba(118, 179, 180, 1) 95%
+  ); */
+}
+
+.nav-link .menu-item:hover {
+  color: white;
 }
 
 .drop-menu span a {
@@ -213,6 +234,7 @@
 
 .title-products {
   font-size: calc(5px + 1vmin);
+  word-break: break-all;
 }
 
 .price-products {
@@ -296,7 +318,7 @@
 }
 
 .regist a:hover {
-  color: white;
+  color: white !important;
   cursor: pointer;
   padding: 7px;
   border-radius: 15px;

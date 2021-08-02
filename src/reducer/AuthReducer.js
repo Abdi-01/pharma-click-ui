@@ -1,4 +1,4 @@
-import { act } from "react-dom/cjs/react-dom-test-utils.production.min";
+// import { act } from "react-dom/cjs/react-dom-test-utils.production.min";
 import { LOGIN_FAILED, LOGIN_SUCCES, LOGOUT } from "../Helper";
 
 const INTIAL_STATE = {

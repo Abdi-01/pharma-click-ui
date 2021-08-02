@@ -15,6 +15,7 @@ import axios from 'axios';
 import { URL_API } from '../Helper';
 import { getProductAction } from '../action'
 import { connect } from 'react-redux';
+import HTTP from '../service/HTTP';
 class DialogAdd extends React.Component {
     constructor(props) {
         super(props);
@@ -82,15 +83,16 @@ class DialogAdd extends React.Component {
             let formData = new FormData()
             let total_netto = qty * netto
             stock = [{ idtype: 1, qty, total_netto, idstatus: 1 }]
-            this.setState({ stock })
+            // this.setState({ stock })
 
             let data = { product_name: productName, brand, idcategory: selectedCategory.id, description, effect, usage, dosage, indication, netto, pack_price: price, unit: selectedUnit.name, stock }
             formData.append('data', JSON.stringify(data))
             formData.append('products', fileUpload)
 
-            let res = await axios.post(URL_API + '/product/add', formData)
+            // let res = await axios.post(URL_API + '/product',  formData )
+            let res = await HTTP.post('/product', formData)
             console.log(res.data)
-            this.setState({ selectedCategory: '', selectedUnit: '', fileUpload: '' })
+            this.setState({ selectedCategory: '', selectedUnit: '', fileUpload: '', stock })
             this.props.hide()
             this.props.toast()
             this.props.getProductAction(1)
@@ -148,24 +150,24 @@ class DialogAdd extends React.Component {
                                 <InputNumber inputId="minmax-buttons" mode="decimal" showButtons min={1} max={100} onValueChange={(e) => this.setState({ netto: e.target.value })} value={this.state.netto} />
                                 {!netto && <small className="p-error">Required.</small>}
                             </span>
-                            <span className="mx-3" style={{width: '40%'}}>
+                            <span className="mx-3" style={{ width: '40%' }}>
                                 <label >Unit</label>
                                 <Dropdown value={this.state.selectedUnit} options={this.unit} onChange={(e) => this.setState({ selectedUnit: e.value })} optionLabel="name" placeholder="Select a Unit" />
                                 {!selectedUnit && <small className="p-error">Required.</small>}
                             </span>
-                            <span style={{width: '25%'}}>
+                            <span style={{ width: '25%' }}>
                                 <label >Qty</label>
                                 <InputNumber inputId="minmax-buttons" mode="decimal" showButtons min={1} max={100} onValueChange={(e) => this.setState({ qty: e.target.value })} value={this.state.qty} />
                                 {!qty && <small className="p-error">Required.</small>}
                             </span>
                         </div>
                         <div className="d-flex my-3" style={{ fontSize: '15px' }}>
-                            <span style={{width: '50%'}}>
+                            <span style={{ width: '50%' }}>
                                 <label style={{ fontWeight: 'bold' }} >Category</label>
                                 <Dropdown value={this.state.selectedCategory} options={this.category} onChange={(e) => this.setState({ selectedCategory: e.value })} optionLabel="name" placeholder="Select Category" />
                                 {!selectedCategory && <small className="p-error">Required.</small>}
                             </span>
-                            <span className="ml-2" style={{width: '50%'}}>
+                            <span className="ml-2" style={{ width: '50%' }}>
                                 <label style={{ fontWeight: 'bold' }}>Type</label>
                                 <InputText disabled value="pack" />
                             </span>

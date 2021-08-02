@@ -24,10 +24,18 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import "../../assets/css/profilePage.css";
 import Profile from "../../assets/images/profile.png";
-import { getCity, getAddress, getImageProfileUser } from "../../action";
+import {
+  getCity,
+  getAddress,
+  getImageProfileUser,
+  keepLogin,
+} from "../../action";
 import { connect } from "react-redux";
 import axios from "axios";
 import { URL_API } from "../../Helper";
+import HTTP from "../../service/HTTP";
+
+let token = localStorage.getItem("tkn_id");
 
 class ProfileComp extends React.Component {
   constructor(props) {
@@ -55,6 +63,7 @@ class ProfileComp extends React.Component {
     this.props.getCity();
     this.getAnImages();
     this.props.getImageProfileUser(this.props.user.iduser);
+    this.props.keepLogin(token);
   }
 
   getAnImages = () => {
@@ -99,10 +108,24 @@ class ProfileComp extends React.Component {
       age: parseInt(this.ageIn.value),
     };
     formData.append("data", JSON.stringify(data));
-    formData.append("images", this.state.fileUpload);
-
+    console.log("fileupload", this.state.fileUpload);
+    if (this.state.fileUpload !== null) {
+      if (
+        this.state.fileUpload.type.split("/")[1] === "jpeg" ||
+        this.state.fileUpload.type.split("/")[1] === "jpg"
+      ) {
+        formData.append("images", this.state.fileUpload);
+        const headers = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    // if (
+    //   this.state.fileUpload.type.split("/")[1] === "jpeg" ||
+    //   this.state.fileUpload.type.split("/")[1] === "jpg"
+    // ) {
     axios
-      .patch(URL_API + `/user/patch-user`, formData)
+      .patch(URL_API + `/user/patch-user`, formData, headers)
       .then((res) => {
         this.getAnImages();
         this.props.getImageProfileUser(this.props.user.iduser);
@@ -120,6 +143,32 @@ class ProfileComp extends React.Component {
       .catch((err) => {
         console.log(err);
       });
+      }else{
+      this.setState({
+          alert1: !this.state.alert1,
+          color1: "danger",
+          message1: "Image extension must .jpg or .jpeg",
+        });
+        setTimeout(() => {
+          this.setState({
+            alert1: !this.state.alert1,
+          });
+        }, 3000);
+    }
+    }
+  
+    // } else {
+    //   this.setState({
+    //     alert1: !this.state.alert1,
+    //     color1: "danger",
+    //     message1: "image must .jpg/.jpeg",
+    //   });
+    //   setTimeout(() => {
+    //     this.setState({
+    //       alert1: !this.state.alert1,
+    //     });
+    //   }, 3000);
+    // }
   };
 
   onBtnEditAddress = () => {
@@ -166,6 +215,23 @@ class ProfileComp extends React.Component {
           console.log(err);
         });
     }
+  };
+
+  onBtnSetDefault = (idaddressIn) => {
+    let idaddress = idaddressIn;
+    let iduser = this.props.user.iduser;
+    axios
+      .patch(URL_API + `/user/set-default`, {
+        idaddress: idaddress,
+        iduser: iduser,
+      })
+      .then((res) => {
+        // this.props.getAddress(this.props.user.iduser);
+        this.props.keepLogin(token);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   onBtnAddAddress = () => {
@@ -624,6 +690,7 @@ class ProfileComp extends React.Component {
                     <input
                       id="file-input"
                       type="file"
+                      accept="image/jpg, image/jpeg"
                       onChange={this.handleChange}
                     />
                   </div>
@@ -796,7 +863,9 @@ class ProfileComp extends React.Component {
                   <div className="inputan btn-address mt-3">
                     <div>
                       {this.props.user.address.map((item, idx) => {
-                        console.log("delete", this.props.user.address);
+                        {
+                          /* console.log("delete", this.props.user.address); */
+                        }
                         return (
                           <>
                             {item.iduser === this.props.user.iduser && (
@@ -847,6 +916,19 @@ class ProfileComp extends React.Component {
                                       >
                                         Delete
                                       </a>
+                                      {item.set_default !== 1 && (
+                                        <>
+                                          <a
+                                            style={{ color: "white" }}
+                                            className="btn-set-default"
+                                            onClick={() => {
+                                              this.onBtnSetDefault(item.id);
+                                            }}
+                                          >
+                                            Set As Default
+                                          </a>
+                                        </>
+                                      )}
                                     </div>
                                   </CardBody>
                                 </Card>
@@ -882,4 +964,5 @@ export default connect(mapStateToProps, {
   getCity,
   getAddress,
   getImageProfileUser,
+  keepLogin,
 })(ProfileComp);
