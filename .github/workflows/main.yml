@@ -18,5 +18,7 @@ jobs:
           script: |
             cd ${{ secrets.PROJECT_PATH }}
             git pull origin ${{ secrets.BRANCH }}
+            docker image rm --force pharma-ui:beta
             docker build --tag pharma-ui:beta .
+            docker container rm --force pharma-ui
             docker run -d -p 3002:3000 --name pharma-ui pharma-ui:beta
