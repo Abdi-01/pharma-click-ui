@@ -1,4 +1,4 @@
-name: CI Pharma-Click UI
+name: CI Pharma-Click FE
 
 on: 
   push:
