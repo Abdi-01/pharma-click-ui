@@ -4,7 +4,7 @@ import {
   LOGIN_SUCCES,
   LOGOUT,
   URL_API,
-  GET_PROFILE_IMAGE,
+  // GET_PROFILE_IMAGE,
   GET_DATA_ADDRESS,
 } from "../Helper";
 import HTTP from "../service/HTTP";
@@ -55,19 +55,19 @@ export const getAddress = (iduser) => {
   };
 };
 
-export const getImageProfileUser = (id) => {
-  return async (dispatch) => {
-    try {
-      let res = await HTTP.get(`/user/get-image-user?iduser=${id}`);
-      dispatch({
-        type: GET_PROFILE_IMAGE,
-        payload: res.data,
-      });
-    } catch (error) {
-      console.log("Get Image Profile Error", error);
-    }
-  };
-};
+// export const getImageProfileUser = (id) => {
+//   return async (dispatch) => {
+//     try {
+//       let res = await HTTP.get(`/user/get-image-user?iduser=${id}`);
+//       dispatch({
+//         type: GET_PROFILE_IMAGE,
+//         payload: res.data,
+//       });
+//     } catch (error) {
+//       console.log("Get Image Profile Error", error);
+//     }
+//   };
+// };
 
 export const keepLogin = (token) => {
   return async (dispatch) => {

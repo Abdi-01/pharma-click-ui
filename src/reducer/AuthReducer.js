@@ -14,7 +14,7 @@ const INTIAL_STATE = {
   messages: "",
   response: "",
   phone_number: "",
-  image_profile: [],
+  profile_image: ""
 };
 
 export const authReducer = (state = INTIAL_STATE, action) => {

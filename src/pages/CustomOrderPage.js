@@ -43,7 +43,7 @@ class CustomOrderPage extends React.Component {
       colorAlert: "",
       popoverOpen: false,
       popoverMessage: "",
-      selectedAddress: [],
+      selectedAddress: null,
       shippingCost: 0,
       activeFormAddress: false,
       alertAddress: false,
@@ -55,15 +55,19 @@ class CustomOrderPage extends React.Component {
     this.handleChange = this.handleChange.bind(this);
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.props.getCity();
-    this.getAddressDefault();
-
-    setTimeout(() => {
-      this.shippingCost();
-    }, 1500);
-    this.cekPrice();
-    // this.props.getAddress(this.props.user.iduser);
+    const addresses = await this.getAddressDefault();
+    if (addresses.length <= 0) {
+      this.shippingCost()
+    }else{
+    const defaultAddress = addresses[0]
+    const dataShippingCost = await this.getShippingCost(defaultAddress)
+    this.setState({
+      selectedAddress: defaultAddress,
+      dataShippingCost,
+    })
+    }
   }
 
   handleChange(e) {
@@ -92,10 +96,10 @@ class CustomOrderPage extends React.Component {
       iduser: iduser,
     })
       .then((res) => {
-        this.getAddressDefault();
         this.props.getAddress(this.props.user.iduser);
+        this.getAddressDefault();
         this.setState({ modal: !this.state.modal });
-        this.shippingCost();
+        this.getShippingCost()
         this.cekPrice();
         this.props.keepLogin(token);
         this.setState({ dataShippingCost: [], shippingCost: 0 });
@@ -166,13 +170,13 @@ class CustomOrderPage extends React.Component {
   };
 
   getAddressDefault = () => {
-    HTTP.get(`/user/get-address?set_default=${1}`)
+    return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
       .then((res) => {
-        console.log("waw", res.data);
-        this.setState({ selectedAddress: res.data });
+        console.log('address',res.data)
+        return res.data
       })
       .catch((err) => {
-        console.log(err);
+        return err
       });
   };
 
@@ -480,6 +484,7 @@ class CustomOrderPage extends React.Component {
                       className="form-inputan"
                       innerRef={(e) => (this.cityForm = e)}
                       id="city"
+                      onChange={this.onChange}
                       // innerRef={(e) => (this.originIn = e)}
                       // onChange={this.shippingCost}
                       required
@@ -585,27 +590,37 @@ class CustomOrderPage extends React.Component {
   };
 
   onChange = (e) => {
-    this.shippingCost();
+    // this.getShippingCost();
     return this.setState({ shippingCost: this.serviceShippigIn.value });
     // return e.target.value;
   };
 
-  shippingCost = async () => {
-    if (this.state.selectedAddress) {
+  getShippingCost = (address) => {
+     return HTTP.post(`/transaction/shipping-cost`, {
+        origin: 22,
+        destination: address.id_city_origin,
+        weight: 1000,
+      })
+        .then((res) => {
+          return res.data;
+        })
+        .catch((error) => {
+          return error;
+        });
+  };
+
+  shippingCost = () => {
       HTTP.post(`/transaction/shipping-cost`, {
-        origin: this.state.selectedAddress.id_city_origin,
-        destination: 22,
+        origin: 22,
+        destination: this.cityForm.value,
         weight: 1000,
       })
         .then((res) => {
           this.setState({ dataShippingCost: res.data });
         })
         .catch((error) => {
-          console.log(error);
+          return error
         });
-    } else {
-      alert("error");
-    }
   };
 
   printAlert = () => {
@@ -646,6 +661,8 @@ class CustomOrderPage extends React.Component {
       id_city_destination: 22,
       recipient: this.state.selectedAddress.recipient,
       postal_code: this.state.selectedAddress.postal_code,
+      expedition: this.shippingIn.value,
+      service: parseInt(this.serviceShippigIn.value),
       address: this.state.selectedAddress.address,
       shipping_cost: 0,
       total_price: 0,
@@ -684,16 +701,17 @@ class CustomOrderPage extends React.Component {
 
   checkoutFormPerscription = () => {
     let formData = new FormData();
-    let token = localStorage.getItem("tkn_id");
 
     let data = {
       id_transaction_status: 4,
       invoice: `PRM#CLICK${new Date().valueOf()}`,
-      id_city_origin: this.state.selectedAddress.id_city_origin,
+      id_city_origin: this.cityForm.value,
       id_city_destination: 22,
       recipient: this.recipientForm.value,
       postal_code: parseInt(this.postalCodeForm.value),
       address: this.addressForm.value,
+      expedition: this.shippingIn.value,
+      service: parseInt(this.serviceShippigIn.value),
       shipping_cost: 0,
       total_price: this.cekPrice(),
       note: this.noteIn.value,
@@ -816,12 +834,14 @@ class CustomOrderPage extends React.Component {
                                 name="select"
                                 id="exampleSelect"
                                 required="true"
+                                // onChange={()=>{this.setState({expedition:this.value})}}
+                                innerRef={(e) => (this.shippingIn = e)}
                               >
                                 {this.state.dataShippingCost.map(
                                   (item, idx) => {
                                     return (
                                       <>
-                                        <option>JNE</option>
+                                        <option value="JNE">JNE</option>
                                       </>
                                     );
                                   }
@@ -845,10 +865,10 @@ class CustomOrderPage extends React.Component {
                                     console.log("ITEM", item.cost);
                                     return (
                                       <>
-                                        {item.cost.cost.map((val, idx) => {
+                                        {item.cost.cost.map((val, index) => {
                                           return (
                                             <>
-                                              <option value={val.value}>
+                                              <option value={idx}>
                                                 {item.cost.service} (
                                                 {item.cost.description})
                                               </option>
@@ -924,7 +944,7 @@ class CustomOrderPage extends React.Component {
                                     innerRef={(e) => (this.shippingIn = e)}
                                   >
                                     <option value="JNE">JNE</option>
-                                    )}
+                                    )
                                   </Input>
                                 </FormGroup>
                               </Col>
@@ -946,10 +966,10 @@ class CustomOrderPage extends React.Component {
                                         console.log("ITEM", item.cost);
                                         return (
                                           <>
-                                            {item.cost.cost.map((val, idx) => {
+                                            {item.cost.cost.map((val, index) => { 
                                               return (
                                                 <>
-                                                  <option value={val.value}>
+                                                  <option value={idx}>
                                                     {item.cost.service} (
                                                     {item.cost.description})
                                                   </option>
@@ -1003,7 +1023,7 @@ class CustomOrderPage extends React.Component {
                           <Col md="2 d-flex align-items-center ">
                             <a>3</a>
                           </Col>
-                          <Col md="8 pt-2 d-flex align-items-center">
+                          <Col md="10 pt-2 d-flex align-items-center">
                             <h6 style={{ fontWeight: "900" }}>
                               UPLOAD PERSCRIPTION
                             </h6>

@@ -4,7 +4,9 @@ import { URL_API, headers } from "../Helper";
 class HTTP {
   get = (url, body) => {
 
-    return axios.get(URL_API + url, headers);
+    return axios.get(URL_API + url, headers).catch(res => {
+      return Promise.reject()
+    });
   };
   delete = (url) => {
     return axios.delete(URL_API + url, headers);

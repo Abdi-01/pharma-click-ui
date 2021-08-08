@@ -27,7 +27,6 @@ import Profile from "../../assets/images/profile.png";
 import {
   getCity,
   getAddress,
-  getImageProfileUser,
   keepLogin,
 } from "../../action";
 import { connect } from "react-redux";
@@ -35,7 +34,6 @@ import axios from "axios";
 import { URL_API } from "../../Helper";
 import HTTP from "../../service/HTTP";
 
-let token = localStorage.getItem("tkn_id");
 
 class ProfileComp extends React.Component {
   constructor(props) {
@@ -43,7 +41,7 @@ class ProfileComp extends React.Component {
     this.state = {
       modal: false,
       modals: false,
-      file: Profile,
+      file: this.checkImage(),
       isOpen: false,
       alert: false,
       alert1: false,
@@ -59,45 +57,30 @@ class ProfileComp extends React.Component {
     this.handleChange = this.handleChange.bind(this);
   }
 
+  
   componentDidMount() {
+    let token = localStorage.getItem("tkn_id");
+    this.props.keepLogin(token)
     this.props.getCity();
-    this.getAnImages();
-    this.props.getImageProfileUser(this.props.user.iduser);
-    this.props.keepLogin(token);
   }
 
-  getAnImages = () => {
-    axios
-      .get(URL_API + `/user/get-image-user?iduser=${this.props.user.iduser}`)
-      .then((res) => {
-        if (res.data.image_url.length > 0) {
-          this.setState({ file: res.data.image_url });
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
+  checkImage = () =>{
+    if(this.props.user.profile_image){
+      return  `${URL_API}/${this.props.user.profile_image}`
+    }
+    return Profile
+  }
 
   handleChange(e) {
-    // eslint-disable-next-line) {
-    if (e.target.files[0]) {
-      // var reader = new FileReader();
-      this.setState({
-        fileName: e.target.files[0].name,
-        fileUpload: e.target.files[0],
-        file: URL.createObjectURL(e.target.files[0]),
+    let file = e.target.files[0]
+    this.setState({
+        fileName: file.name,
+        fileUpload: file,
+        file: URL.createObjectURL(file),
       });
-    } else {
-      this.setState({
-        fileName: "Select file",
-        fileUpload: null,
-        file: this.state.file,
-      });
-    }
   }
 
-  onBtSave = () => {
+ onBtSave = () => {
     let formData = new FormData();
     let data = {
       iduser: this.props.user.iduser,
@@ -109,26 +92,24 @@ class ProfileComp extends React.Component {
     };
     formData.append("data", JSON.stringify(data));
     console.log("fileupload", this.state.fileUpload);
+    
     if (this.state.fileUpload !== null) {
       if (
         this.state.fileUpload.type.split("/")[1] === "jpeg" ||
         this.state.fileUpload.type.split("/")[1] === "jpg"
       ) {
-        formData.append("images", this.state.fileUpload);
-        const headers = {
+        formData.append("images", this.state.fileUpload);  
+      }
+    }
+    let token = localStorage.getItem("tkn_id");
+    const headers = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     };
-    // if (
-    //   this.state.fileUpload.type.split("/")[1] === "jpeg" ||
-    //   this.state.fileUpload.type.split("/")[1] === "jpg"
-    // ) {
-    axios
+        axios
       .patch(URL_API + `/user/patch-user`, formData, headers)
       .then((res) => {
-        this.getAnImages();
-        this.props.getImageProfileUser(this.props.user.iduser);
         this.setState({
           alert1: !this.state.alert1,
           color1: "success",
@@ -143,32 +124,6 @@ class ProfileComp extends React.Component {
       .catch((err) => {
         console.log(err);
       });
-      }else{
-      this.setState({
-          alert1: !this.state.alert1,
-          color1: "danger",
-          message1: "Image extension must .jpg or .jpeg",
-        });
-        setTimeout(() => {
-          this.setState({
-            alert1: !this.state.alert1,
-          });
-        }, 3000);
-    }
-    }
-  
-    // } else {
-    //   this.setState({
-    //     alert1: !this.state.alert1,
-    //     color1: "danger",
-    //     message1: "image must .jpg/.jpeg",
-    //   });
-    //   setTimeout(() => {
-    //     this.setState({
-    //       alert1: !this.state.alert1,
-    //     });
-    //   }, 3000);
-    // }
   };
 
   onBtnEditAddress = () => {
@@ -227,6 +182,7 @@ class ProfileComp extends React.Component {
       })
       .then((res) => {
         // this.props.getAddress(this.props.user.iduser);
+        let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
       })
       .catch((err) => {
@@ -278,13 +234,13 @@ class ProfileComp extends React.Component {
           this.props.getAddress(this.props.user.iduser);
           this.setState({
             modal: !this.state.modal,
-            alert: !this.state.alert,
+            alert: true,
             color: "success",
             message: res.data.message,
           });
           setTimeout(() => {
             this.setState({
-              alert: !this.state.alert,
+              alert: false,
             });
           }, 3000);
         })
@@ -655,10 +611,9 @@ class ProfileComp extends React.Component {
               <Col md="9">
                 {" "}
                 <div className="d-flex justify-content-start align-items-center profile-image">
+                {this.props.user.profile_image ?(<></>):(<></>)}
                   <img
                     id="blah"
-                    // src={this.checkImageProfile()}
-                    // src={this.checkImageProfile()}
                     src={this.state.file}
                     width="100px"
                     height="100px"
@@ -752,7 +707,7 @@ class ProfileComp extends React.Component {
                               Phone Number
                             </Label>
                             <Input
-                              type="number"
+                              type="text"
                               name="phoneNumber"
                               id="phoneNumber"
                               placeholder="Enter your phone number"
@@ -768,7 +723,7 @@ class ProfileComp extends React.Component {
                               Age
                             </Label>
                             <Input
-                              type="text"
+                              type="number"
                               name="age"
                               id="age"
                               placeholder="Enter your age"
@@ -956,13 +911,12 @@ const mapStateToProps = ({ productReducer, authReducer }) => {
   return {
     user: authReducer,
     city: productReducer.city_list,
-    profile: productReducer.image_profile,
+    profile: productReducer.profile_image,
   };
 };
 
 export default connect(mapStateToProps, {
   getCity,
   getAddress,
-  getImageProfileUser,
   keepLogin,
 })(ProfileComp);

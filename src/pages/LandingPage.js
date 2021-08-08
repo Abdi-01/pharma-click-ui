@@ -137,10 +137,9 @@ class LandingPage extends React.Component {
     this.state = { filter: [], more: 6 };
   }
 
-  componentDidMount() {
-    setTimeout(() => {
-      this.onBtnFilterCategory()
-    }, 800);
+  async componentDidMount() {
+      this.props.getProductAction(1);
+      await this.onBtnFilterCategory()
     
   }
 

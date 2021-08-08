@@ -159,20 +159,10 @@ class ProductPage extends React.Component {
   }
 
   componentDidMount() {
-    // let list = document.querySelectorAll(`.list`);
-    // for (let i = 0; i < list.length; i++) {
-    //   list[i].onclick = function () {
-    //     let j = 0;
-    //     while (j < list.length) {
-    //       list[j++].className = "list";
-    //     }
-    //     list[i].className = "list active";
-    //   };
-    // }
     this.props.getProductAction(1);
   }
 
-  handleClick(event) {
+  handleClick = (event) => {
     this.setState({
       currentPage: Number(event.target.id),
     });
@@ -692,7 +682,7 @@ class ProductPage extends React.Component {
     ) {
       pageNumbers.push(i);
     }
-    // console.log("currentTodos", currentTodos);
+    console.log("currentTodos", currentTodos);
     return (
       <Container fluid className="mt-5">
         <Row>
@@ -861,7 +851,10 @@ class ProductPage extends React.Component {
                             top
                             width="100%"
                             height="auto"
-                            src={item.images}
+                            src={
+                              item.images[0].includes('http') ?
+                              item.images[0] : `${URL_API}/${item.images}`
+                            }
                             alt={item.product_name}
                             className="img-fluid "
                           />
@@ -896,7 +889,7 @@ class ProductPage extends React.Component {
                             href="#"
                             key={item}
                             id={item}
-                            onClick={this.handleClick}
+                            onClick={(event) => this.handleClick(event)}
                           >
                             {item}
                           </PaginationLink>

@@ -29,7 +29,6 @@ import CartEmpty from "../assets/images/emptyCart.jpg";
 import axios from "axios";
 import { URL_API } from "../Helper";
 
-let token = localStorage.getItem("tkn_id");
 
 class CartPage extends React.Component {
   constructor(props) {
@@ -42,23 +41,30 @@ class CartPage extends React.Component {
       colorAlert: "",
       popoverOpen: false,
       popoverMessage: "",
-      selectedAddress: [],
+      selectedAddress: null,
       shippingCost: 0,
       activeFormAddress: false,
       alertAddress: false,
       alertSuccessOpen: false,
       openAlertForm: false,
+      qtyRemain: []
     };
   }
 
-  componentDidMount() {
+  async componentDidMount() {
     this.props.getCity();
-    this.getAddressDefault();
-    setTimeout(() => {
-      this.shippingCost();
-    }, 1500);
-    this.cekPrice();
-    // this.props.getAddress(this.props.user.iduser);
+    const addresses = await this.getAddressDefault();
+    if (addresses.length <= 0) {
+      await this.cityForm.value
+      await this.shippingCost()
+    } else {
+      const defaultAddress = addresses[0]
+      const dataShippingCost = await this.getShippingCost(defaultAddress)
+      this.setState({
+        selectedAddress: defaultAddress,
+        dataShippingCost,
+      })
+    }
   }
 
   onBtnSetDefault = (idaddressIn) => {
@@ -69,13 +75,14 @@ class CartPage extends React.Component {
       iduser: iduser,
     })
       .then((res) => {
-        this.getAddressDefault();
         this.props.getAddress(this.props.user.iduser);
         this.setState({ modal: !this.state.modal });
         this.shippingCost();
         this.cekPrice();
+        let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
         this.setState({ dataShippingCost: [], shippingCost: 0 });
+        this.getAddressDefault();
       })
       .catch((err) => {
         console.log(err);
@@ -143,13 +150,13 @@ class CartPage extends React.Component {
   };
 
   getAddressDefault = () => {
-    HTTP.get(`/user/get-address?set_default=${1}`)
+    return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
       .then((res) => {
-        console.log("waw", res.data);
-        this.setState({ selectedAddress: res.data });
+        console.log('address', res.data)
+        return res.data
       })
       .catch((err) => {
-        console.log(err);
+        return err
       });
   };
 
@@ -458,7 +465,7 @@ class CartPage extends React.Component {
                       innerRef={(e) => (this.cityForm = e)}
                       id="city"
                       // innerRef={(e) => (this.originIn = e)}
-                      // onChange={this.shippingCost}
+                      onChange={() => { this.shippingCost() }}
                       required
                     >
                       {this.props.city.map((item) => {
@@ -576,10 +583,11 @@ class CartPage extends React.Component {
         netto: netto,
       });
       if (res.data) {
+        let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
         if (res.data.message) {
           this.setState({
-            popoverOpen: !this.state.popoverOpen,
+            popoverOpen: true,
             popoverMessage: res.data.message,
           });
         }
@@ -603,6 +611,7 @@ class CartPage extends React.Component {
       netto: netto,
     })
       .then((res) => {
+        let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
       })
       .catch((err) => {
@@ -617,6 +626,7 @@ class CartPage extends React.Component {
     )
       .then((res) => {
         // alert(res.data.message);
+        let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
       })
       .catch((err) => {
@@ -625,27 +635,38 @@ class CartPage extends React.Component {
   };
 
   onChange = (e) => {
-    this.shippingCost();
-    return this.setState({ shippingCost: this.serviceShippigIn.value });
+    // this.getShippingCost();
+    return this.setState({ shippingCost: this.serviceShippingIn.value });
+
     // return e.target.value;
   };
 
-  shippingCost = async () => {
-    if (this.state.selectedAddress) {
-      HTTP.post(`/transaction/shipping-cost`, {
-        origin: this.state.selectedAddress.id_city_origin,
-        destination: 22,
-        weight: 1000,
+  getShippingCost = (address) => {
+    return HTTP.post(`/transaction/shipping-cost`, {
+      origin: 22,
+      destination: address.id_city_origin,
+      weight: 1000,
+    })
+      .then((res) => {
+        return res.data;
       })
-        .then((res) => {
-          this.setState({ dataShippingCost: res.data });
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-    } else {
-      alert("error");
-    }
+      .catch((error) => {
+        return error;
+      });
+  };
+
+  shippingCost = () => {
+    HTTP.post(`/transaction/shipping-cost`, {
+      origin: 22,
+      destination: this.cityForm.value,
+      weight: 1000,
+    })
+      .then((res) => {
+        this.setState({ dataShippingCost: res.data })
+      })
+      .catch((error) => {
+        return error
+      });
   };
 
   printAlert = () => {
@@ -667,7 +688,7 @@ class CartPage extends React.Component {
           placement="bottom"
           isOpen={this.state.popoverOpen}
           target="Popover1"
-          // toggle={() => this.setState({ popoverOpen: !this.state.popoverOpen })}
+        // toggle={() => this.setState({ popoverOpen: !this.state.popoverOpen })}
         >
           <PopoverHeader>{this.state.popoverMessage}</PopoverHeader>
           <PopoverBody>You can't add more quantity</PopoverBody>
@@ -678,7 +699,6 @@ class CartPage extends React.Component {
 
   checkoutTransactions = () => {
     // let formData = new FormData();
-    let token = localStorage.getItem("tkn_id");
     let idProductAll = [];
     this.props.user.cart.forEach((item, idx) => {
       idProductAll.push({
@@ -698,17 +718,20 @@ class CartPage extends React.Component {
       recipient: this.state.selectedAddress.recipient,
       postal_code: this.state.selectedAddress.postal_code,
       address: this.state.selectedAddress.address,
+      // expedition:this.shippingIn.value,
+      // service:this.serviceShippingIn.value,
       shipping_cost: this.state.shippingCost,
       total_price: this.cekPrice(),
       note: this.noteIn.value,
       idtype: 1,
     };
+    let token = localStorage.getItem("tkn_id");
     const headers = {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     };
-    if (data.shippingCost < 1) {
+    if (data.shipping_cost < 1) {
       this.setState({
         alertSuccessOpen: !this.state.alertSuccessOpen,
         color: "danger",
@@ -721,13 +744,13 @@ class CartPage extends React.Component {
           this.props.keepLogin(token);
           if (res.data.message.includes("not enough stock")) {
             this.setState({
-              alertSuccessOpen: !this.state.alertSuccessOpen,
+              alertSuccessOpen: true,
               color: "danger",
               alertMessage: res.data.message,
             });
           } else {
             this.setState({
-              alertSuccessOpen: !this.state.alertSuccessOpen,
+              alertSuccessOpen: true,
               color: "success",
               alertMessage: res.data.message,
             });
@@ -741,7 +764,6 @@ class CartPage extends React.Component {
 
   checkoutFormTransactions = () => {
     // let formData = new FormData();
-
     let idProductAll = [];
     this.props.user.cart.forEach((item, idx) => {
       idProductAll.push({
@@ -755,16 +777,19 @@ class CartPage extends React.Component {
       id_transaction_status: 4,
       idproduct: idProductAll,
       invoice: `PRM#CLICK${new Date().valueOf()}`,
-      id_city_origin: this.state.selectedAddress.id_city_origin,
+      id_city_origin: this.cityForm.value,
       id_city_destination: 22,
       recipient: this.recipientForm.value,
       postal_code: parseInt(this.postalCodeForm.value),
       address: this.addressForm.value,
+      // expedition:this.shippingIn.value,
+      // service:this.serviceShippingIn.value,
       shipping_cost: this.state.shippingCost,
       total_price: this.cekPrice(),
       note: this.noteIn.value,
       idtype: 1,
     };
+    let token = localStorage.getItem("tkn_id");
     const headers = {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -774,7 +799,7 @@ class CartPage extends React.Component {
       data.recipient === "" ||
       this.postalCodeForm.value === "" ||
       data.address === "" ||
-      data.shippingCost < 1
+      data.shipping_cost < 1
     ) {
       this.setState({
         openAlertForm: !this.state.openAlertForm,
@@ -899,7 +924,7 @@ class CartPage extends React.Component {
                                 type="select"
                                 name="select"
                                 id="exampleSelect"
-                                innerRef={(e) => (this.serviceShippigIn = e)}
+                                innerRef={(e) => (this.serviceShippingIn = e)}
                                 onChange={this.onChange}
                               >
                                 <option value={0}>Choose Service</option>
@@ -993,7 +1018,7 @@ class CartPage extends React.Component {
                                     innerRef={(e) => (this.shippingIn = e)}
                                   >
                                     <option value="JNE">JNE</option>
-                                    )}
+                                    )
                                   </Input>
                                 </FormGroup>
                               </Col>
@@ -1005,7 +1030,7 @@ class CartPage extends React.Component {
                                     name="select"
                                     id="exampleSelect"
                                     innerRef={(e) =>
-                                      (this.serviceShippigIn = e)
+                                      (this.serviceShippingIn = e)
                                     }
                                     onChange={this.onChange}
                                   >
@@ -1124,6 +1149,7 @@ class CartPage extends React.Component {
                                         width: "60px",
                                         textAlign: "center",
                                       }}
+                                      innerRef={(e) => (this.qtyCheck = e)}
                                       disabled
                                     />
                                     <Button

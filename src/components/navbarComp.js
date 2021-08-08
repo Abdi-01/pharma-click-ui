@@ -23,7 +23,7 @@ import "../assets/css/navigation.css";
 import Logo from "../assets/images/logo.png";
 import Profile from "../assets/images/profile.png";
 import { connect } from "react-redux";
-import { authLogout, getImageProfileUser } from "../action";
+import { authLogout } from "../action";
 import axios from "axios";
 import CartEmpty from "../assets/images/emptyCart.jpg";
 import { URL_API } from "../Helper";
@@ -31,14 +31,11 @@ import { URL_API } from "../Helper";
 class NavbarComp extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { isOpen: false, role: "user", file: Profile };
+    this.state = { isOpen: false, role: "user", file: this.checkImage() };
   }
 
   componentDidMount() {
-    setTimeout(() => {
-      this.getAnImages();
-    }, 800);
-
+    this.checkImage()
     let list = document.querySelectorAll(`.menu-item`);
     for (let i = 0; i < list.length; i++) {
       list[i].onclick = function () {
@@ -49,22 +46,15 @@ class NavbarComp extends React.Component {
         list[i].className = "menu-item active";
       };
     }
-    // this.props.getImageProfileUser(this.props.user.iduser);
   }
 
-  getAnImages =  () => {
-     axios
-      .get(URL_API + `/user/get-image-user?iduser=${this.props.user.iduser}`)
-      .then((res) => {
-        if (res.data.image_url.length > 0) {
-          this.setState({ file: res.data.image_url });
-        }
-      })
-      .catch((err) => {
-        this.setState({ file: Profile });
-        console.log(err);
-      });
-  };
+  checkImage = () => {
+    if(this.props.user.profile_image){
+      return `${URL_API}/${this.props.user.profile_image}`
+    }else{
+      return Profile
+    }
+  }
 
   btLogout = () => {
     this.props.authLogout();
@@ -225,13 +215,24 @@ class NavbarComp extends React.Component {
                 <NavItem type="none" style={{ marginRight: "10px" }}>
                   <a>{this.props.user.fullname.split(" ")[0]}</a>
                 </NavItem>
-                <img
-                  src={this.state.file}
+                {this.props.user.profile_image ?(<><img
+                  src={`${URL_API}/${this.props.user.profile_image}`}
+                  width="35px;"
+                  height="35px;"
+                  style={{ borderRadius: "50%" }}
+                  alt="profile image"
+                /></>):(
+                  <>
+                  <img
+                  src={Profile}
                   width="35px;"
                   height="35px;"
                   style={{ borderRadius: "50%" }}
                   alt="profile image"
                 />
+                </>
+                )}
+                
                 <UncontrolledDropdown>
                   <DropdownToggle nav caret></DropdownToggle>
                   <DropdownMenu right>
@@ -302,6 +303,6 @@ const mapStateToProps = ({ productReducer, authReducer }) => {
   };
 };
 
-export default connect(mapStateToProps, { authLogout, getImageProfileUser })(
+export default connect(mapStateToProps, { authLogout })(
   NavbarComp
 );

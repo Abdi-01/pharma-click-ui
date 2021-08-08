@@ -45,13 +45,37 @@ class SidebarComp extends React.Component {
                 </Link>
               </li>
               <li>
-                <Link to="/" style={{ textDecoration: "none" }}>
+                <Link
+                  to="/custom-product-management"
+                  style={{ textDecoration: "none" }}
+                >
+                  <span className="ti-folder"></span>
+                  <span>Custom Product</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/custom-order"
+                  style={{ textDecoration: "none" }}
+                >
+                  <span className="ti-shopping-cart"></span>
+                  <span>Custom Order</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/transactions" style={{ textDecoration: "none" }}>
                   <span className="ti-time"></span>
                   <span>Transactions</span>
                 </Link>
               </li>
               <li>
-                <Link to="/" style={{ textDecoration: "none" }}>
+                <Link to="/sales-report" style={{ textDecoration: "none" }}>
+                  <span className="ti-time"></span>
+                  <span>Sales Report</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/revenue-report" style={{ textDecoration: "none" }}>
                   <span className="ti-book"></span>
                   <span>Revenue</span>
                 </Link>
