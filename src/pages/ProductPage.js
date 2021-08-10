@@ -18,7 +18,7 @@ import {
   Modal,
   ModalHeader,
   ModalBody,
-  ModalFooter,
+  ModalFooter,Toast,ToastHeader,ToastBody
 } from "reactstrap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -155,6 +155,8 @@ class ProductPage extends React.Component {
       modal: false,
       modalProtection: false,
       searchFilter: [],
+      show:false,
+      showMessage:""
     };
   }
 
@@ -656,7 +658,10 @@ class ProductPage extends React.Component {
         .then((res) => {
           let token = localStorage.getItem("tkn_id");
           this.props.keepLogin(token);
-          // alert(`${res.data}`);
+          this.setState({show:true,showMessage:res.data})
+          setTimeout(() => {
+            this.setState({show:false,})
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -685,6 +690,16 @@ class ProductPage extends React.Component {
     console.log("currentTodos", currentTodos);
     return (
       <Container fluid className="mt-5">
+        <Container style={{position:"fixed",zIndex:999,top:"10%"}} className="p-3 my-2 rounded">
+        <Toast isOpen={this.state.show}>
+          <ToastHeader>
+            Add To Cart
+          </ToastHeader>
+          <ToastBody>
+            {this.state.showMessage}
+          </ToastBody>
+        </Toast>
+        </Container>
         <Row>
           {/* Sidebar */}
           {this.printFilterAll()}

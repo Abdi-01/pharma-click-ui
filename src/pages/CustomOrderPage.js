@@ -98,7 +98,7 @@ class CustomOrderPage extends React.Component {
     })
       .then((res) => {
         this.props.getAddress(this.props.user.iduser);
-        this.getAddressDefault();
+        this.getChangeAddressDefault()
         this.setState({ modal: !this.state.modal });
         this.getShippingCost()
         this.cekPrice();
@@ -183,7 +183,6 @@ class CustomOrderPage extends React.Component {
   getAddressDefault = () => {
     return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
       .then((res) => {
-        console.log('address',res.data)
         return res.data
       })
       .catch((err) => {
@@ -450,6 +449,16 @@ class CustomOrderPage extends React.Component {
         </Modal>
       </>
     );
+  };
+
+  getChangeAddressDefault = () => {
+    return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
+      .then((res) => {
+        return this.setState({selectedAddress:res.data[0]}) 
+      })
+      .catch((err) => {
+        return err
+      });
   };
 
   printFormAddress = () => {
