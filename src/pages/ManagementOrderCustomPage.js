@@ -17,7 +17,8 @@ class ManagementOrderCustomPage extends React.Component {
             modal:false,img_order:"",
             modalServe:false,
             products:[{idproduct: "", netto: "", unit: ""}],
-            product:[],userTransactions:[],
+            product:[],
+            userTransactions:[],
             shippingCost:[],
             stock:[],
             invalid:false,
@@ -53,14 +54,15 @@ class ManagementOrderCustomPage extends React.Component {
         let expedition = this.state.userTransactions.expedition;
         let service = this.state.service;
         let shippingCost = this.state.shippingCost;
+        let totalPrice = this.checkPrice()
         console.log('cek submit cek 9',products,destination,postalCode,recipient,note,address,expedition,service,shippingCost)
         let token = localStorage.getItem("tkn_id");
         const headers = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        };
-        axios.post(URL_API + `/transaction/perscription`,{
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          };
+        HTTP.post(`/transaction/perscription`,{
             idtransaction:idtransaction,
             products:products,
             destination:destination,
@@ -70,7 +72,8 @@ class ManagementOrderCustomPage extends React.Component {
             address:address,
             expedition:expedition,
             service:service,
-            shippingCost:shippingCost
+            shippingCost:shippingCost,
+            totalPrice:totalPrice,
         },headers).then((res)=>{
             this.getTransactionHistory()
             alert(res.data.message)
@@ -79,6 +82,15 @@ class ManagementOrderCustomPage extends React.Component {
             console.log(err)
         })
     }
+
+    checkPrice = () => {
+        let price = null
+        price = this.state.products.reduce(
+          (a, v) => (a = a + (v.total_netto*v.unit_price)),
+          0
+        );
+        return price = parseInt(price) + parseInt(this.state.shippingCost)
+      };
 
     getDetailTransactions = (idtransaction) => {
         HTTP.get(`/user/detail-transactions/${idtransaction}`)
@@ -95,13 +107,12 @@ class ManagementOrderCustomPage extends React.Component {
     getTransactionHistory = (val) => {
         let vals = `&id=${val}`
         if(val){
-            let token = localStorage.getItem("tkn_id");
             const headers = {
                 headers: {
-                Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${localStorage.getItem('tkn_id')}`,
                 },
-            };
-            axios.get(URL_API + `/user/sort-transactions?idtype=2${vals}`,headers)
+              };
+            HTTP.get( `/user/sort-transactions?idtype=2${vals}`,headers)
                 .then((res) => {
                 this.setState({      
                     userTransactions: res.data[0],
@@ -112,13 +123,12 @@ class ManagementOrderCustomPage extends React.Component {
                 console.log(err);
                 });
         }else{
-            let token = localStorage.getItem("tkn_id");
             const headers = {
                 headers: {
-                Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${localStorage.getItem('tkn_id')}`,
                 },
-            };
-            axios.get(URL_API + `/user/sort-transactions?idtype=2&id_transaction_status=4`,headers)
+              };
+            HTTP.get(`/user/sort-transactions?idtype=2&id_transaction_status=4`,headers)
                 .then((res) => {
                 this.setState({ 
                     historyTransactions: res.data,
@@ -333,6 +343,7 @@ class ManagementOrderCustomPage extends React.Component {
         console.log('shippingCost',this.state.shippingCost)
         console.log('isi form products',this.state.products)
         console.log('service',this.state.service)
+        console.log('user transaction',this.state.userTransactions)
         const { currentPage, todosPerPage } = this.state;
         // Logic for displaying todos
         const indexOfLastTodo = currentPage * todosPerPage;

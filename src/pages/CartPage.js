@@ -26,9 +26,8 @@ import { faTimes, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import HTTP from "../service/HTTP";
 import CartEmpty from "../assets/images/emptyCart.jpg";
-import axios from "axios";
-import { URL_API } from "../Helper";
 import {Link,Redirect} from "react-router-dom"
+import { headers } from "../Helper";
 
 
 class CartPage extends React.Component {
@@ -71,20 +70,22 @@ class CartPage extends React.Component {
 
   onBtnSetDefault = (idaddressIn) => {
     let idaddress = idaddressIn;
-    let iduser = this.props.user.iduser;
+    const headers = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+      },
+    };
     HTTP.patch(`/user/set-default`, {
       idaddress: idaddress,
-      iduser: iduser,
-    })
+    },headers)
       .then((res) => {
         this.props.getAddress(this.props.user.iduser);
-        this.setState({ modal: !this.state.modal });
+        this.setState({ modal: !this.state.modal, dataShippingCost: [], shippingCost: 0});
         this.shippingCost();
         this.cekPrice();
         let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
-        this.setState({ dataShippingCost: [], shippingCost: 0 });
-        this.getAddressDefault();
+        // this.getAddressDefault();
       })
       .catch((err) => {
         console.log(err);
@@ -121,6 +122,11 @@ class CartPage extends React.Component {
         });
       }, 3000);
     } else {
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
       HTTP.post(`/user/post-address`, {
         tag,
         recipient,
@@ -128,15 +134,21 @@ class CartPage extends React.Component {
         origin,
         address,
         postalCode,
-      })
+      },headers)
         .then((res) => {
           this.props.getAddress(this.props.user.iduser);
           this.setState({
             // modal: !this.state.modal,
-            alertAddress: !this.state.alertAddress,
+            activeFormAddress:false,
+            alertAddress: true,
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({
+              alertAddress: false,
+            });
+          }, 3000);
         })
         .catch((err) => {
           console.log(err);
@@ -165,7 +177,6 @@ class CartPage extends React.Component {
   getAddressDefault = () => {
     return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
       .then((res) => {
-        console.log('address',res.data)
         return res.data
       })
       .catch((err) => {
@@ -750,6 +761,11 @@ class CartPage extends React.Component {
         color: "danger",
         alertMessage: "Choose Shipping Services",
       });
+      setTimeout(() => {
+        this.setState({
+          alertSuccessOpen: !this.state.alertSuccessOpen,
+        });
+      }, 3000);
     } else if(this.props.user.role !== 'user'){
       this.setState({
         alertSuccessOpen: !this.state.alertSuccessOpen,
@@ -757,8 +773,13 @@ class CartPage extends React.Component {
         alertMessage: "You must login for continue checkout",
       });
     }else{
-      axios
-        .post(URL_API + `/transaction/checkout`, data, headers)
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .post(`/transaction/checkout`, data, headers)
         .then((res) => {
           this.props.keepLogin(token);
           if (res.data.message.includes("not enough stock")) {
@@ -836,8 +857,13 @@ class CartPage extends React.Component {
         alertMessage: "You must login to continue checkout.",
       });
     }else{
-      axios
-        .post(URL_API + `/transaction/checkout`, data, headers)
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .post(`/transaction/checkout`, data, headers)
         .then((res) => {
           this.props.keepLogin(token);
           this.setState({

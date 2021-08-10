@@ -37,7 +37,7 @@ class NavbarComp extends React.Component {
   componentDidMount() {
     this.checkImage()
     let list = document.querySelectorAll(`.menu-item`);
-    for (let i = 1; i < list.length; i++) {
+    for (let i = 0; i < list.length; i++) {
       list[i].onclick = function () {
         let j = 0;
         while (j < list.length) {
