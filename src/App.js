@@ -105,6 +105,7 @@ const AdminPage = () => {
         <Route path="/transactions" component={TransactionAdminPage} />
         <Route path={"/sales-report"} component={SalesReportPage} />
         <Route path={"/revenue-report"} component={RevenuePage} />
+        <Route path={"/custom-order"} component={ManagementOrderCustomPage} />
         <Route component={NotFoundPage} />
       </Switch>
       <FooterComp />
