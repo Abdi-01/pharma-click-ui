@@ -14,7 +14,7 @@ import {
   Modal,
   ModalBody,
   ModalHeader,
-  Form,
+  Form,Pagination,PaginationItem,PaginationLink
 } from "reactstrap";
 import HTTP from "../service/HTTP.js";
 import Upload from "../assets/images/bg-upload.png";
@@ -46,7 +46,9 @@ class TransactionPage extends React.Component {
       statusTrans: 4,
       activeIndex: 0,
       modalType: 'detail',
-      productReview: []
+      productReview: [],
+      currentPage: 1,
+      todosPerPage: 5
     };
     this.handleChange = this.handleChange.bind(this);
 
@@ -61,7 +63,7 @@ class TransactionPage extends React.Component {
   }
 
   componentDidMount() {
-    this.getTransactionHistory();
+    this.getTransactionHistory(4);
   }
 
   getDetailTransactions = async (idtransaction) => {
@@ -82,6 +84,12 @@ class TransactionPage extends React.Component {
     //     console.log(err);
     //   });
   };
+
+  handleClick = (event) => {
+    this.setState({
+      currentPage: Number(event.target.id),
+    });
+  }
 
   handleChange(e) {
     // eslint-disable-next-line) {
@@ -437,6 +445,24 @@ class TransactionPage extends React.Component {
     this.setState({ activeIndex: index })
   }
   render() {
+    const { currentPage, todosPerPage } = this.state;
+    // Logic for displaying todos
+    const indexOfLastTodo = currentPage * todosPerPage;
+    const indexOfFirstTodo = indexOfLastTodo - todosPerPage;
+    const currentTodos = this.state.historyTransactions.slice(
+      indexOfFirstTodo,
+      indexOfLastTodo
+    );
+
+    // Logic for displaying page numbers
+    const pageNumbers = [];
+    for (
+      let i = 1;
+      i <= Math.ceil(this.state.historyTransactions.length / todosPerPage);
+      i++
+    ) {
+      pageNumbers.push(i);
+    }
     console.log("waw", this.state.historyTransactions);
     console.log("iduser", this.props.iduser);
     // console.log("detran", this.state.detailTransactions);
@@ -456,7 +482,7 @@ class TransactionPage extends React.Component {
             </Col>
             {
               this.state.historyTransactions.length > 0 ?
-                this.state.historyTransactions.map((item) => {
+              currentTodos.map((item) => {
                   return (
                     <>
                     {item.idtype === 1 && item.iduser === this.props.iduser ? (<><Col md="12">
@@ -648,7 +674,6 @@ class TransactionPage extends React.Component {
                         </Container>
                       </Card>
                     </Col></>)}
-                      
                     </>
                   );
                 })
@@ -656,6 +681,34 @@ class TransactionPage extends React.Component {
                 <h6>No records found</h6>
             }
           </Row>
+          <Container className="mt-5">
+              <Row>
+                <Col md="4 m-auto" xs="9 m-auto" sm="4 m-auto">
+                  <Pagination aria-label="Page navigation example">
+                    <PaginationItem>
+                      <PaginationLink first href="#" />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink previous href="#" />
+                    </PaginationItem>
+                    {pageNumbers.map((item) => {
+                      return (
+                        <PaginationItem>
+                          <PaginationLink
+                            href="#"
+                            key={item}
+                            id={item}
+                            onClick={(event) => this.handleClick(event)}
+                          >
+                            {item}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                  </Pagination>
+                </Col>
+              </Row>
+            </Container>
         </Container>
       </Col>
     );

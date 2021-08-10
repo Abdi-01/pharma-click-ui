@@ -28,6 +28,7 @@ import HTTP from "../service/HTTP";
 import CartEmpty from "../assets/images/emptyCart.jpg";
 import axios from "axios";
 import { URL_API } from "../Helper";
+import {Redirect} from "react-router-dom"
 import Perscription from "../assets/images/perscription.jpg";
 
 let token = localStorage.getItem("tkn_id");
@@ -51,6 +52,7 @@ class CustomOrderPage extends React.Component {
       openAlertForm: false,
       file: Perscription,
       fileUpload: null,
+      link : false
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -698,6 +700,9 @@ class CustomOrderPage extends React.Component {
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({link:true})
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -758,6 +763,9 @@ class CustomOrderPage extends React.Component {
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({link:true})
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -772,6 +780,15 @@ class CustomOrderPage extends React.Component {
     // console.log("selected address", this.state.selectedAddress.id_city_origin);
     console.log("selected address", this.state.selectedAddress);
     // console.log("cek", this.checkIdProduct());
+    if(this.state.link){
+      return <Redirect push to ={{
+        pathname: "/profile", 
+        state: { 
+          indexActive:3
+        }
+      }} style={{ textDecoration: "none" }}>
+    </Redirect>
+    }
 
     return (
       <Container className="p-5" style={{ backgroundColor: "#F7F7F7" }} fluid>

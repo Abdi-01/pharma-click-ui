@@ -120,6 +120,9 @@ class ProfileComp extends React.Component {
             alert1: !this.state.alert1,
           });
         }, 3000);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       })
       .catch((err) => {
         console.log(err);
@@ -691,7 +694,7 @@ class ProfileComp extends React.Component {
                               Email
                             </Label>
                             <Input
-                              type="email"
+                              type="text"
                               name="email"
                               id="exampleEmail"
                               placeholder="Enter your email"

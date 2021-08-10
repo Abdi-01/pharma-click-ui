@@ -27,6 +27,7 @@ import TransactionPage from "./pages/TransactionPage";
 import SalesReportPage from "./pages/SalesReportPage";
 import RevenuePage from "./pages/RevenuePage";
 import ManagementOrderCustomPage from "./pages/ManagementOrderCustomPage";
+import PaymentPage from "./pages/paymentPage";
 
 class App extends React.Component {
   constructor(props) {
@@ -80,6 +81,7 @@ const UserPage = () => {
         <Route path={"/cart"} component={CartPage} />
         <Route path={"/detail"} component={ProductDetailPage} />
         <Route path={"/custom"} component={CustomOrderPage} />
+        <Route path={"/payment"} component={PaymentPage} />
         <Route component={NotFoundPage} />
       </Switch>
       <FooterComp />

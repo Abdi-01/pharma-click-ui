@@ -58,6 +58,12 @@ class TransactionAdminPage extends React.Component {
       });
   };
 
+  handleClick = (event) => {
+    this.setState({
+      currentPage: Number(event.target.id),
+    });
+  }
+
   printModal = () => {
     return (
       <>
