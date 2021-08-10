@@ -44,6 +44,7 @@ class ManagementOrderCustomPage extends React.Component {
       }
 
     onBtnSubmit = () =>{
+        let iduser = this.state.userTransactions.iduser
         let idtransaction = this.state.userTransactions.id;
         let products = this.state.products;
         let destination = this.state.userTransactions.destination;
@@ -63,6 +64,7 @@ class ManagementOrderCustomPage extends React.Component {
             },
           };
         HTTP.post(`/transaction/perscription`,{
+            iduser:iduser,
             idtransaction:idtransaction,
             products:products,
             destination:destination,
@@ -168,7 +170,7 @@ class ManagementOrderCustomPage extends React.Component {
             res.data[0].stock.map((item,idx)=>{
                 this.setState({stock:item})
             })
-            this.state.products[index] = {idproduct:parseInt(this.productVal.value),netto:this.state.product.netto,total_netto:parseInt(this.qtyVal.value),unit:this.state.product.unit,unit_price:this.state.stock.unit_price };
+            this.state.products[index] = {id:index,idproduct:parseInt(this.productVal.value),netto:this.state.product.netto,total_netto:parseInt(this.qtyVal.value),unit:this.state.product.unit,unit_price:this.state.stock.unit_price };
             this.setState({ products: this.state.products});
         }).catch((err)=>{
             console.log(err)
@@ -197,18 +199,18 @@ class ManagementOrderCustomPage extends React.Component {
 
     };
 
-    // handleRemoveFields = (id) => {
-    //     // return console.log('index',id)
-    //     let val = [...this.state.products]
-    //     return console.log('val',val.splice(3,1))
-    //     this.setState({products:val})
-    // }
+    handleRemoveFields = (id) => {
+        const products=this.state.products
+        products.splice(id,1)
+        this.setState({products})
+      }
 
-   handleRemoveFields = (index) =>{
-    let values  = [...this.state.products];
-    let lastVal = values.splice(index, 1);
-    this.setState({products:lastVal})
-   }
+//    handleRemoveFields = (index) =>{
+//     let values  = [...this.state.products];
+//     let lastVal = values.splice(index, 1);
+//     return console.log('cek penghapusan',values.splice(index, 1))
+//     this.setState({products:lastVal})
+//    }
 
     printProducts = () => {
         if (this.state.products.length >= 0) {
@@ -227,7 +229,7 @@ class ManagementOrderCustomPage extends React.Component {
                     </Col>
                     <Col md="3">
                             <Label>Netto</Label>
-                            <Input type="number" innerRef={(e) => (this.qtyVal = e)} onChange={(e) => this.handleProducts(e, index)} min={0} max={this.state.stock.total_netto}  />
+                            <Input type="number" innerRef={(e) => (this.qtyVal = e)} onChange={(e) => this.handleProducts(e, index)} min={1} max={this.state.stock.total_netto}  />
                             {/* <FormFeedback invalid={this.state.invalid}>Stock not enough, remaining stock is {this.state.stock.total_netto}</FormFeedback> */}
                    </Col>
                     <Col md="3"><Label>Measure</Label>
@@ -253,7 +255,7 @@ class ManagementOrderCustomPage extends React.Component {
                                     type="button"
                                     size="sm"
                                     style={{ float: "right" }}
-                                    onClick={this.handleRemoveFields.bind(this, index)}
+                                    onClick={this.handleRemoveFields.bind(index, this)}
                                     >
                                     -
                                     </Button>

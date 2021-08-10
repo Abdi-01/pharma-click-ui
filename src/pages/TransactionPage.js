@@ -335,13 +335,13 @@ class TransactionPage extends React.Component {
     formData.append("data", JSON.stringify(data));
     formData.append("images", this.state.fileUpload);
 
-    let token = localStorage.getItem("tkn_id");
-    const headers = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    };
     if (this.state.fileUpload !== null) {
+      let token = localStorage.getItem("tkn_id");
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
       axios
         .post(URL_API + `/user/upload-transaction`, formData, headers)
         .then((res) => {

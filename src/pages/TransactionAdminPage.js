@@ -29,6 +29,7 @@ class TransactionAdminPage extends React.Component {
     this.state = {
       historyTransactions: [],
       modal: false,
+      modalConfirmation: false,
       modalUpload: false,
       detailTransactions: [],
       file: Upload,
@@ -39,6 +40,7 @@ class TransactionAdminPage extends React.Component {
       idtransaction: null,
       currentPage: 1,
       todosPerPage: 5,
+      detailConfirmation:[]
     };
   }
 
@@ -51,6 +53,19 @@ class TransactionAdminPage extends React.Component {
       .then((res) => {
         this.setState({
           detailTransactions: res.data,
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  getConfirmationPayment = (idtransaction) => {
+    console.log('idtransaction',idtransaction)
+    HTTP.get(`/user/confirmation-payment/${idtransaction}`)
+      .then((res) => {
+        this.setState({
+          detailConfirmation: res.data,
         });
       })
       .catch((err) => {
@@ -183,6 +198,40 @@ class TransactionAdminPage extends React.Component {
     );
   };
 
+  printModalConfirmation = () =>{
+    return (<><Modal isOpen={this.state.modalConfirmation}>
+      <ModalBody>
+        <Container>
+          <Row>
+            <Col md="12">
+            <div className="d-flex justify-content-between ">
+                  <h6 className="pt-3">Payment Proof</h6>
+                  <Button
+                    color="danger"
+                    onClick={() => {
+                      this.setState({ modalConfirmation: !this.state.modalConfirmation });
+                    }}
+                  >
+                    X
+                  </Button>
+                </div>
+              <hr style={{border: "2px solid rgba(34, 129, 133, 1)"}}/>
+              {this.state.detailConfirmation.map((item,idx)=>{
+                return(<><img src={
+                  item.image_url.includes("http")
+                    ? `${item.image_url}`
+                    
+                    : `${URL_API}/${item.image_url}`
+                } width="100%" /></>)
+                
+              })}
+            </Col>
+          </Row>
+        </Container>
+      </ModalBody>
+    </Modal></>)
+  }
+
   removeDuplicates() {
     return Array.from(new Set(this.state.historyTransactions.map(a => a.iduser)))
     .map(id => {
@@ -272,6 +321,7 @@ class TransactionAdminPage extends React.Component {
         <Col md="8 mt-4">
           <Container>
             {this.printModal()}
+            {this.printModalConfirmation()}
             <Row>
               <h5>Transaction <hr style={{border: "2px solid rgba(34, 129, 133, 1)"}}/></h5>
               <Col md="12 mt-2">
@@ -325,6 +375,7 @@ class TransactionAdminPage extends React.Component {
                                 onClick={() => {
                                   this.setState({ modal: !this.state.modal });
                                   this.getDetailTransactions(item.id);
+                                  this.getConfirmationPayment(item.id);
                                 }}
                               >
                                 Detail
@@ -350,8 +401,8 @@ class TransactionAdminPage extends React.Component {
                                   <Button 
                                   color="warning"
                                   onClick={() => {
-                                      this.setState({ modal: !this.state.modal });
-                                      this.getDetailTransactions(item.id);
+                                      this.setState({ modalConfirmation: !this.state.modalConfirmation });
+                                      this.getConfirmationPayment(item.id);
                                   }}
                                   >
                                   Detail

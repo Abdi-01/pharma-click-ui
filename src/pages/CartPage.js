@@ -80,12 +80,13 @@ class CartPage extends React.Component {
     },headers)
       .then((res) => {
         this.props.getAddress(this.props.user.iduser);
+        this.getChangeAddressDefault()
         this.setState({ modal: !this.state.modal, dataShippingCost: [], shippingCost: 0});
         this.shippingCost();
         this.cekPrice();
         let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
-        // this.getAddressDefault();
+        this.getAddressDefault();
       })
       .catch((err) => {
         console.log(err);
@@ -237,6 +238,16 @@ class CartPage extends React.Component {
         })}
       </>
     );
+  };
+
+  getChangeAddressDefault = () => {
+    return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
+      .then((res) => {
+        return this.setState({selectedAddress:res.data[0]}) 
+      })
+      .catch((err) => {
+        return err
+      });
   };
 
   printChooseAddress = () => {
