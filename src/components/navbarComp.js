@@ -144,13 +144,13 @@ class NavbarComp extends React.Component {
                   </NavLink>
                 </Link>
               </NavItem>
-              <NavItem>
+              {this.props.user.role === "user" ?(<><NavItem>
                 <Link to="/custom">
                   <NavLink>
                     <a className="menu-item">Custom Order</a>
                   </NavLink>
                 </Link>
-              </NavItem>
+              </NavItem></>):(<></>)}
             </Nav>
             {this.props.user.role === "user" ? (
               <div className="d-flex justify-content-end align-items-center drop-menu">
@@ -236,10 +236,22 @@ class NavbarComp extends React.Component {
                 <UncontrolledDropdown>
                   <DropdownToggle nav caret></DropdownToggle>
                   <DropdownMenu right>
-                    <Link to="/profile" style={{ textDecoration: "none" }}>
+                    <Link to ={{
+                        pathname: "/profile", 
+                        state: { 
+                          indexActive:1
+                        }
+                      }} style={{ textDecoration: "none" }}>
                       <DropdownItem>Edit Profile</DropdownItem>
                     </Link>
-                    <DropdownItem>Change Password</DropdownItem>
+                    <Link to ={{
+                        pathname: "/profile", 
+                        state: { 
+                          indexActive:3
+                        }
+                      }} style={{ textDecoration: "none" }}>
+                    <DropdownItem>Transactions</DropdownItem>
+                    </Link>
                     <Link
                       to="/"
                       style={{ textDecoration: "none" }}

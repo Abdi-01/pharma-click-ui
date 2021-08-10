@@ -120,6 +120,9 @@ class ProfileComp extends React.Component {
             alert1: !this.state.alert1,
           });
         }, 3000);
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       })
       .catch((err) => {
         console.log(err);
@@ -142,8 +145,13 @@ class ProfileComp extends React.Component {
       this.postalCodeEd.value === ""
     ) {
     } else {
-      axios
-        .patch(URL_API + `/user/patch-address`, {
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .patch(`/user/patch-address`, {
           idaddress,
           tag,
           recipient,
@@ -151,7 +159,7 @@ class ProfileComp extends React.Component {
           origin,
           address,
           postalCode,
-        })
+        },headers)
         .then((res) => {
           this.props.getAddress(this.props.user.iduser);
           this.setState({
@@ -174,12 +182,15 @@ class ProfileComp extends React.Component {
 
   onBtnSetDefault = (idaddressIn) => {
     let idaddress = idaddressIn;
-    let iduser = this.props.user.iduser;
+    const headers = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+      },
+    };
     axios
       .patch(URL_API + `/user/set-default`, {
         idaddress: idaddress,
-        iduser: iduser,
-      })
+      },headers)
       .then((res) => {
         // this.props.getAddress(this.props.user.iduser);
         let token = localStorage.getItem("tkn_id");
@@ -221,15 +232,20 @@ class ProfileComp extends React.Component {
         });
       }, 3000);
     } else {
-      axios
-        .post(URL_API + `/user/post-address`, {
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .post(`/user/post-address`, {
           tag,
           recipient,
           iduser,
           origin,
           address,
           postalCode,
-        })
+        },headers)
         .then((res) => {
           this.props.getAddress(this.props.user.iduser);
           this.setState({
@@ -251,8 +267,13 @@ class ProfileComp extends React.Component {
   };
 
   onBtnDeleteAddress = (idx) => {
-    axios
-      .delete(URL_API + `/user/delete-address/?id=${idx}`)
+    const headers = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+      },
+    };
+    HTTP
+      .delete(`/user/delete-address/?id=${idx}`,headers)
       .then((res) => {
         this.props.getAddress(this.props.user.iduser);
         this.setState({
@@ -691,7 +712,7 @@ class ProfileComp extends React.Component {
                               Email
                             </Label>
                             <Input
-                              type="email"
+                              type="text"
                               name="email"
                               id="exampleEmail"
                               placeholder="Enter your email"
@@ -818,9 +839,6 @@ class ProfileComp extends React.Component {
                   <div className="inputan btn-address mt-3">
                     <div>
                       {this.props.user.address.map((item, idx) => {
-                        {
-                          /* console.log("delete", this.props.user.address); */
-                        }
                         return (
                           <>
                             {item.iduser === this.props.user.iduser && (
@@ -862,17 +880,17 @@ class ProfileComp extends React.Component {
                                       >
                                         Edit Address
                                       </a>
-                                      <a
-                                        style={{ color: "white" }}
-                                        className="btn-delete"
-                                        onClick={() => {
-                                          this.onBtnDeleteAddress(item.id);
-                                        }}
-                                      >
-                                        Delete
-                                      </a>
                                       {item.set_default !== 1 && (
                                         <>
+                                          <a
+                                            style={{ color: "white" }}
+                                            className="btn-delete"
+                                            onClick={() => {
+                                              this.onBtnDeleteAddress(item.id);
+                                            }}
+                                          >
+                                            Delete
+                                          </a>
                                           <a
                                             style={{ color: "white" }}
                                             className="btn-set-default"

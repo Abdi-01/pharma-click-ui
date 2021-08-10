@@ -484,7 +484,7 @@ class CustomProductManagementPage extends React.Component {
           {/* DIALOG */}
           <DialogProductCustom
             category={selectedCategory}
-            unit={selectedUnit}
+            selectedUnit={selectedUnit}
             productDetail={productDetail}
             productDialog={productDialog}
             hide={() => this.setState({ productDialog: false })}

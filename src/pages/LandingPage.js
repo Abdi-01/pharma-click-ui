@@ -12,7 +12,7 @@ import {
 } from "reactstrap";
 import { connect } from "react-redux";
 import { Carousel } from "react-responsive-carousel";
-
+import {URL_API} from "../Helper"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Link } from "react-router-dom";
 import {
@@ -32,20 +32,12 @@ import {
 import { faApple, faGooglePlay } from "@fortawesome/free-brands-svg-icons";
 import Slider from "react-slick";
 import ProductBanner from "../assets/images/bannerProduct.gif";
-import Banner1 from "../assets/images/banner1.gif";
-import Product1 from "../assets/images/product1.jpg";
-import Product2 from "../assets/images/product2.jpg";
-import Product3 from "../assets/images/product3.jpg";
-import Product5 from "../assets/images/product5.jpg";
-import Product6 from "../assets/images/product6.jpg";
 import Phone from "../assets/images/phone1.JPG";
 import Feedback from "../assets/images/feedback.jpg";
 import Chat from "../assets/images/chat2.png";
 import Delivery from "../assets/images/delivery.png";
 import Tilt from "react-vanilla-tilt";
 import "../assets/css/navigation.css";
-import axios from "axios";
-import { URL_API } from "../Helper";
 import { getProductAction } from "../action";
 
 var settings = {
@@ -138,8 +130,8 @@ class LandingPage extends React.Component {
   }
 
   async componentDidMount() {
-      this.props.getProductAction(1);
-      await this.onBtnFilterCategory()
+    await this.props.getProductAction(1);
+    this.onBtnFilterCategory()
     
   }
 
@@ -214,7 +206,12 @@ class LandingPage extends React.Component {
                                 >
                                   <CardImg
                                     width="100%"
-                                    src={item.images[0]}
+                                    src={
+                                      item.images[0].includes("http")
+                                        ? `${item.images[0]}`
+                                        
+                                        : `${URL_API}/${item.images[0]}`
+                                    }
                                     alt="sanmol"
                                     className="img-fluid p-2"
                                     style={{
@@ -426,7 +423,12 @@ class LandingPage extends React.Component {
                             <img
                               top
                               width="100%"
-                              src={item.images[0]}
+                              src={
+                                item.images[0].includes("http")
+                                  ? `${item.images[0]}`
+                                  
+                                  : `${URL_API}/${item.images[0]}`
+                              }
                               alt={item.product_name}
                               className="img-fluid p-2"
                               height="auto"

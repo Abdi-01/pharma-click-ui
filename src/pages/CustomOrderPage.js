@@ -26,8 +26,8 @@ import { faTimes, faPlus, faCamera } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import HTTP from "../service/HTTP";
 import CartEmpty from "../assets/images/emptyCart.jpg";
-import axios from "axios";
 import { URL_API } from "../Helper";
+import {Redirect} from "react-router-dom"
 import Perscription from "../assets/images/perscription.jpg";
 
 let token = localStorage.getItem("tkn_id");
@@ -51,6 +51,7 @@ class CustomOrderPage extends React.Component {
       openAlertForm: false,
       file: Perscription,
       fileUpload: null,
+      link : false
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -139,22 +140,32 @@ class CustomOrderPage extends React.Component {
         });
       }, 3000);
     } else {
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
       HTTP.post(`/user/post-address`, {
         tag,
         recipient,
-        iduser,
         origin,
         address,
         postalCode,
-      })
+      },headers)
         .then((res) => {
           this.props.getAddress(this.props.user.iduser);
           this.setState({
             // modal: !this.state.modal,
+            activeFormAddress:false,
             alertAddress: !this.state.alertAddress,
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({
+              alertAddress: false,
+            });
+          }, 3000);
         })
         .catch((err) => {
           console.log(err);
@@ -657,8 +668,8 @@ class CustomOrderPage extends React.Component {
     let data = {
       id_transaction_status: 4,
       invoice: `PRM#CLICK${new Date().valueOf()}`,
-      id_city_origin: this.state.selectedAddress.id_city_origin,
-      id_city_destination: 22,
+      id_city_origin: 22,
+      id_city_destination: this.state.selectedAddress.id_city_origin,
       recipient: this.state.selectedAddress.recipient,
       postal_code: this.state.selectedAddress.postal_code,
       expedition: this.shippingIn.value,
@@ -682,9 +693,20 @@ class CustomOrderPage extends React.Component {
         color: "danger",
         alertMessage: "You Must Upload Image Perscription",
       });
-    } else {
-      axios
-        .post(URL_API + `/transaction/checkout-perscription`, formData, headers)
+    } else if(this.props.user.role !== 'user'){
+      this.setState({
+        openAlertForm: !this.state.openAlertForm,
+        color: "danger",
+        alertMessage: "You must login to continue checkout.",
+      });
+    }else{
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .post(`/transaction/checkout-perscription`, formData, headers)
         .then((res) => {
           this.props.keepLogin(token);
           this.setState({
@@ -692,6 +714,9 @@ class CustomOrderPage extends React.Component {
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({link:true})
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -705,8 +730,8 @@ class CustomOrderPage extends React.Component {
     let data = {
       id_transaction_status: 4,
       invoice: `PRM#CLICK${new Date().valueOf()}`,
-      id_city_origin: this.cityForm.value,
-      id_city_destination: 22,
+      id_city_origin: 22,
+      id_city_destination: this.cityForm.value,
       recipient: this.recipientForm.value,
       postal_code: parseInt(this.postalCodeForm.value),
       address: this.addressForm.value,
@@ -736,8 +761,19 @@ class CustomOrderPage extends React.Component {
         color: "danger",
         alertMessage: "Please fill all field.",
       });
-    } else {
-      axios
+    } else if(this.props.user.role !== 'user'){
+      this.setState({
+        openAlertForm: !this.state.openAlertForm,
+        color: "danger",
+        alertMessage: "You must login to continue checkout.",
+      });
+    }else{
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
         .post(URL_API + `/transaction/checkout-perscription`, formData, headers)
         .then((res) => {
           this.props.keepLogin(token);
@@ -746,6 +782,9 @@ class CustomOrderPage extends React.Component {
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({link:true})
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -760,6 +799,15 @@ class CustomOrderPage extends React.Component {
     // console.log("selected address", this.state.selectedAddress.id_city_origin);
     console.log("selected address", this.state.selectedAddress);
     // console.log("cek", this.checkIdProduct());
+    if(this.state.link){
+      return <Redirect push to ={{
+        pathname: "/profile", 
+        state: { 
+          indexActive:3
+        }
+      }} style={{ textDecoration: "none" }}>
+    </Redirect>
+    }
 
     return (
       <Container className="p-5" style={{ backgroundColor: "#F7F7F7" }} fluid>

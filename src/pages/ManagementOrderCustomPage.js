@@ -6,6 +6,7 @@ import "../assets/css/ManagementOrder.css"
 import HTTP from "../service/HTTP.js";
 import { connect } from "react-redux";
 import { getProductAction } from "../action";
+import { faThermometerHalf } from '@fortawesome/free-solid-svg-icons';
 
 class ManagementOrderCustomPage extends React.Component {
     constructor(props) {
@@ -16,7 +17,8 @@ class ManagementOrderCustomPage extends React.Component {
             modal:false,img_order:"",
             modalServe:false,
             products:[{idproduct: "", netto: "", unit: ""}],
-            product:[],userTransactions:[],
+            product:[],
+            userTransactions:[],
             shippingCost:[],
             stock:[],
             invalid:false,
@@ -27,12 +29,19 @@ class ManagementOrderCustomPage extends React.Component {
             currentPage: 1,
             todosPerPage: 5,
          }
+        //  this.handleRemoveFields.bind(this)
     }
 
     componentDidMount() {
-        this.props.getProductAction(2)
         this.getTransactionHistory()
+        this.props.getProductAction(2)
     }
+
+    handleClick = (event) => {
+        this.setState({
+          currentPage: Number(event.target.id),
+        });
+      }
 
     onBtnSubmit = () =>{
         let idtransaction = this.state.userTransactions.id;
@@ -45,14 +54,15 @@ class ManagementOrderCustomPage extends React.Component {
         let expedition = this.state.userTransactions.expedition;
         let service = this.state.service;
         let shippingCost = this.state.shippingCost;
+        let totalPrice = this.checkPrice()
         console.log('cek submit cek 9',products,destination,postalCode,recipient,note,address,expedition,service,shippingCost)
         let token = localStorage.getItem("tkn_id");
         const headers = {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-        };
-        axios.post(URL_API + `/transaction/perscription`,{
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          };
+        HTTP.post(`/transaction/perscription`,{
             idtransaction:idtransaction,
             products:products,
             destination:destination,
@@ -62,7 +72,8 @@ class ManagementOrderCustomPage extends React.Component {
             address:address,
             expedition:expedition,
             service:service,
-            shippingCost:shippingCost
+            shippingCost:shippingCost,
+            totalPrice:totalPrice,
         },headers).then((res)=>{
             this.getTransactionHistory()
             alert(res.data.message)
@@ -71,6 +82,15 @@ class ManagementOrderCustomPage extends React.Component {
             console.log(err)
         })
     }
+
+    checkPrice = () => {
+        let price = null
+        price = this.state.products.reduce(
+          (a, v) => (a = a + (v.total_netto*v.unit_price)),
+          0
+        );
+        return price = parseInt(price) + parseInt(this.state.shippingCost)
+      };
 
     getDetailTransactions = (idtransaction) => {
         HTTP.get(`/user/detail-transactions/${idtransaction}`)
@@ -87,13 +107,12 @@ class ManagementOrderCustomPage extends React.Component {
     getTransactionHistory = (val) => {
         let vals = `&id=${val}`
         if(val){
-            let token = localStorage.getItem("tkn_id");
             const headers = {
                 headers: {
-                Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${localStorage.getItem('tkn_id')}`,
                 },
-            };
-            axios.get(URL_API + `/user/sort-transactions?idtype=2${vals}`,headers)
+              };
+            HTTP.get( `/user/sort-transactions?idtype=2${vals}`,headers)
                 .then((res) => {
                 this.setState({      
                     userTransactions: res.data[0],
@@ -104,13 +123,12 @@ class ManagementOrderCustomPage extends React.Component {
                 console.log(err);
                 });
         }else{
-            let token = localStorage.getItem("tkn_id");
             const headers = {
                 headers: {
-                Authorization: `Bearer ${token}`,
+                  Authorization: `Bearer ${localStorage.getItem('tkn_id')}`,
                 },
-            };
-            axios.get(URL_API + `/user/sort-transactions?idtype=2&id_transaction_status=4`,headers)
+              };
+            HTTP.get(`/user/sort-transactions?idtype=2&id_transaction_status=4`,headers)
                 .then((res) => {
                 this.setState({ 
                     historyTransactions: res.data,
@@ -141,12 +159,17 @@ class ManagementOrderCustomPage extends React.Component {
   };
 
     handleProducts = (e, index) => {
+        if(!this.qtyVal.value){
+
+        }else{
         HTTP.get(`/product/2?idproduct=${this.productVal.value}`)
         .then((res)=>{
             this.setState({product:res.data[0]})
             res.data[0].stock.map((item,idx)=>{
                 this.setState({stock:item})
             })
+            this.state.products[index] = {idproduct:parseInt(this.productVal.value),netto:this.state.product.netto,total_netto:parseInt(this.qtyVal.value),unit:this.state.product.unit,unit_price:this.state.stock.unit_price };
+            this.setState({ products: this.state.products});
         }).catch((err)=>{
             console.log(err)
         })
@@ -164,57 +187,65 @@ class ManagementOrderCustomPage extends React.Component {
                 invalid : false,
                 alertInvalid:false 
             });
-        }
-        this.state.products[index] = {idproduct:parseInt(this.productVal.value),netto:this.state.product.netto,total_netto:parseInt(this.qtyVal.value),unit:this.unitVal.value,unit_price:this.state.stock.unit_price };
-        this.setState({ products: this.state.products});
+        }                 
+        }     
     };
 
     onBtAddProducts = () => {
-        this.state.products.push(null);
-        this.setState({ products: this.state.products });
+        this.state.products.push([{idproduct: "",netto: "", total_netto: "", unit: ""}]);
+        this.setState({ products: this.state.products,alertInvalid:false });
 
     };
 
-    handleRemoveFields = id => {
-        const values  = [...this.state.products];
-        values.splice(values.findIndex(value => value.id === id), 1);
-        this.setState({products:values})
-      }
+    // handleRemoveFields = (id) => {
+    //     // return console.log('index',id)
+    //     let val = [...this.state.products]
+    //     return console.log('val',val.splice(3,1))
+    //     this.setState({products:val})
+    // }
+
+   handleRemoveFields = (index) =>{
+    let values  = [...this.state.products];
+    let lastVal = values.splice(index, 1);
+    this.setState({products:lastVal})
+   }
 
     printProducts = () => {
         if (this.state.products.length >= 0) {
         return this.state.products.map((item, index) => {
+            console.log('ITEM NI BOUS',item.idproduct)
             return (
             <Container fluid className="p-0">
                 <Row>
                     <Col md="4"><Label>Product Name</Label>
                         <Input type="select" name="select" id="exampleSelect" innerRef={(e) => (this.productVal = e)} onChange={(e) => this.handleProducts(e, index)}>
                                 <option value={0}>Choose Product</option>
-                                {this.props.products.map((item,idx)=>{
-                                    return(<><option value={item.idproduct}>{item.product_name}</option></>)  
+                                {this.props.products.map((val,idx)=>{
+                                    return(<><option value={val.idproduct}>{val.product_name}</option></>)  
                                 })}
                         </Input>
                     </Col>
                     <Col md="3">
                             <Label>Netto</Label>
-                            <Input type="number" innerRef={(e) => (this.qtyVal = e)} onChange={(e) => this.handleProducts(e, index)} max={this.state.stock.total_netto} invalid={this.state.invalid} />
+                            <Input type="number" innerRef={(e) => (this.qtyVal = e)} onChange={(e) => this.handleProducts(e, index)} min={0} max={this.state.stock.total_netto}  />
                             {/* <FormFeedback invalid={this.state.invalid}>Stock not enough, remaining stock is {this.state.stock.total_netto}</FormFeedback> */}
                    </Col>
                     <Col md="3"><Label>Measure</Label>
-                         <Input type="text" name="select" id="exampleSelect" innerRef={(e) => (this.unitVal = e)} value={this.state.product.unit} onChange={(e) => this.handleProducts(e, index)} disabled />
+                         <Input type="text" name="select" id="exampleSelect" innerRef={(e) => (this.unitVal = e)} value={item.unit} onChange={(e) => this.handleProducts(e, index)} disabled />
                     </Col>
-                    <Col md="1 mt-4">
-                                    {/* {this.printProducts()} */}
+                    {item.idproduct !== undefined  && (
+                                <><Col md="1 mt-4">
                                     <Button
                                     color="success"
                                     type="button"
                                     size="sm"
                                     style={{ float: "right" }}
-                                    onClick={this.onBtAddProducts}
+                                    onClick={this.onBtAddProducts.bind(this)}
                                     >
                                     +
                                     </Button>
-                                </Col>
+                                </Col></>)}
+                    
                                 <Col md="1 mt-4">
                                     {/* {this.printProducts()} */}
                                     <Button
@@ -222,105 +253,16 @@ class ManagementOrderCustomPage extends React.Component {
                                     type="button"
                                     size="sm"
                                     style={{ float: "right" }}
-                                    onClick={()=>{this.handleRemoveFields(index)}}
+                                    onClick={this.handleRemoveFields.bind(this, index)}
                                     >
                                     -
                                     </Button>
                                     </Col>
-                                    <Col md="12 mt-2"><Alert isOpen={this.state.alertInvalid} color={this.state.color} style={{fontSize:"11px"}}>{this.state.alertMessage}</Alert></Col>
                 </Row>
             </Container>
             );
         });
         }
-    };
-
-    printModalDetail = () => {
-        return (
-        <>
-            <Modal isOpen={this.state.modal}>
-            <ModalBody>
-                <Container>
-                <Row>
-                    <div className="d-flex justify-content-between ">
-                    <p></p>
-                    <Button
-                        color="danger"
-                        onClick={() => {
-                        this.setState({ modal: !this.state.modal });
-                        }}
-                    >
-                        X
-                    </Button>
-                    </div>
-                    <hr className="mt-3" />
-                    <Col md="12">
-                        <img src={`${URL_API}/${this.state.img_order}`} width="100%" />
-                    </Col>
-                    {this.state.detailTransactions.slice(0, 1).map((item, idx) => {
-                    return (
-                        <>
-                        {" "}
-                        <Col md="6">
-                            <p>
-                            Recipient : <br />
-                            {item.recipient}
-                            </p>
-                        </Col>
-                        <Col md="6">
-                            <p>
-                            Address : <br />
-                            {item.address}, {item.postal_code}
-                            </p>
-                        </Col>
-                        </>
-                    );
-                    })}
-
-                <Col md="6"></Col>
-              </Row>
-            </Container>
-            <hr />
-            <Container>
-              <Row>
-                {this.state.detailTransactions.map((item, idx) => {
-                  return (
-                    <>
-                      <Col md="4">
-                        <img src={item.image_url} width="100%" />
-                      </Col>
-                      <Col md="8 mt-3">
-                        <p>
-                          <strong>{item.product_name}</strong>
-                          <br />
-                          {item.brand}
-                        </p>
-                        <p>
-                          Rp.{item.pack_price.toLocaleString()} X {item.qty_buy}
-                        </p>
-                      </Col>
-                      <hr />
-                    </>
-                  );
-                })}
-              </Row>
-            </Container>
-            <Container>
-              <Row>
-                {this.state.detailTransactions.splice(0, 1).map((item, idx) => {
-                  return (
-                    <>
-                      <Col md="4">Total</Col>
-                      <Col md="8">Rp.{item.total_price.toLocaleString()}</Col>
-                    </>
-                  );
-                })}
-              </Row>
-            </Container>
-          </ModalBody>
-        </Modal>
-      </>
-        );
     };
 
     printModalServeProduct = () =>{
@@ -330,8 +272,8 @@ class ManagementOrderCustomPage extends React.Component {
                     <ModalBody>
                         <Container>
                             <Row>
-                             <div className="d-flex justify-content-between ">
-                    <p></p>
+                             <div className="d-flex justify-content-between">
+                    <p className="pt-2">Serve Transaction</p>
                     <Button
                         color="danger"
                         onClick={() => {
@@ -340,8 +282,12 @@ class ManagementOrderCustomPage extends React.Component {
                     >
                         X
                     </Button>
-                    </div>
+                        </div>
+                                
+                                <Col md="12 mt-2"><img src={`${URL_API}/${this.state.img_order}`} width="100%"/></Col>
+                                <hr style={{border: "2px solid rgba(34, 129, 133, 1)"}} className="mt-3"/>
                                 <Col md="12">{this.printProducts()}</Col>
+                                <Col md="12 mt-2"><Alert isOpen={this.state.alertInvalid} color={this.state.color} style={{fontSize:"11px"}}>{this.state.alertMessage}</Alert></Col>
                                 <Col md="6">
                                     <Label>Destination</Label>
                                     <Input type="select" name="select" id="exampleSelect" innerRef={(e) => (this.destinationForm = e)} disabled>
@@ -388,14 +334,16 @@ class ManagementOrderCustomPage extends React.Component {
     }
 
     render() { 
-        // console.log('transaction history',this.state.historyTransactions)
-        // console.log('detail history',this.state.detailTransactions)
-        // console.log('products',this.state.product)
-        // console.log('products props',this.props.products)
-        // console.log('user',this.props.user)
-        // console.log('shippingCost',this.state.shippingCost)
-        // console.log('isi form products',this.state.products)
-        // console.log('service',this.state.service)
+        console.log('img order',this.state.img_order)
+        console.log('transaction history',this.state.historyTransactions)
+        console.log('detail history',this.state.detailTransactions)
+        console.log('products',this.state.product)
+        console.log('products props',this.props.products)
+        console.log('user',this.props.user)
+        console.log('shippingCost',this.state.shippingCost)
+        console.log('isi form products',this.state.products)
+        console.log('service',this.state.service)
+        console.log('user transaction',this.state.userTransactions)
         const { currentPage, todosPerPage } = this.state;
         // Logic for displaying todos
         const indexOfLastTodo = currentPage * todosPerPage;
@@ -414,13 +362,13 @@ class ManagementOrderCustomPage extends React.Component {
         ) {
         pageNumbers.push(i);
         }
+        console.log("product",this.state.product)
         return ( 
             <div className="main-content">
                     <main>
                         <Container fluid>
                             <Row>
                                 <Col md="12">
-                                {this.printModalDetail()}
                                 {this.printModalServeProduct()}
                                     <div className="wrapper rounded">
                                         <nav className="navbar navbar-expand-lg navbar-dark dark d-lg-flex align-items-lg-start"> <a className="navbar-brand" href="#" style={{color:"black"}}>Transactions <p className="pl-1">Serve Transactions</p> </a> 
@@ -430,7 +378,7 @@ class ManagementOrderCustomPage extends React.Component {
                                             <Col md="6" id="income">
                                                 <div className="d-flex justify-content-start align-items-center" style={{color:"black"}}>
                                                     <p className="pi pi-credit-card"></p>
-                                                    <p className=" mx-3" style={{color:"black"}}>Total Custom Order</p>
+                                                    <p className=" mx-3" style={{color:"black"}}>Total Request Custom Order</p>
                                                     <p className=" money">{this.state.historyTransactions.length}</p>
                                                 </div>
                                             </Col>
@@ -469,12 +417,9 @@ class ManagementOrderCustomPage extends React.Component {
                                                         <td>{item.recipient}</td>
                                                         <td>{item.note}</td>
                                                         <td>{item.status_name}</td>
-                                                        <td><Button outline color="primary" onClick={() => {
-                                                            this.setState({ modal: !this.state.modal,img_order:item.img_order_url });
-                                                            this.getDetailTransactions(item.id);
-                                                        }}>Detail</Button>&nbsp;&nbsp;<Button outline color="success" 
+                                                        <td><Button outline color="success" 
                                                         onClick={async()=>{await this.getTransactionHistory(item.id);
-                                                        this.setState({modalServe:!this.state.modalServe});
+                                                        this.setState({modalServe:!this.state.modalServe,img_order:item.img_order_url});
                                                         }}>Serve</Button></td>
                                                         </tr></>)}
                                                         
