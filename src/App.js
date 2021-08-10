@@ -17,7 +17,7 @@ import ProfilePage from "./pages/profilePage";
 import NavbarComp from "./components/navbarComp";
 import FooterComp from "./components/footerComp";
 import ContactPage from "./pages/ContactPage";
-import ManagementOrderCustomPage from "./pages/ManagementOrderCustomPage";
+// import ManagementOrderCustomPage from "./pages/ManagementOrderCustomPage";
 import CartPage from "./pages/CartPage";
 import CustomOrderPage from "./pages/CustomOrderPage";
 import { keepLogin, getProductAction } from "./action";
@@ -26,7 +26,8 @@ import TransactionAdminPage from "./pages/TransactionAdminPage";
 import TransactionPage from "./pages/TransactionPage";
 import SalesReportPage from "./pages/SalesReportPage";
 import RevenuePage from "./pages/RevenuePage";
-
+import ManagementOrderCustomPage from "./pages/ManagementOrderCustomPage";
+import PaymentPage from "./pages/paymentPage";
 
 class App extends React.Component {
   constructor(props) {
@@ -80,6 +81,7 @@ const UserPage = () => {
         <Route path={"/cart"} component={CartPage} />
         <Route path={"/detail"} component={ProductDetailPage} />
         <Route path={"/custom"} component={CustomOrderPage} />
+        <Route path={"/payment"} component={PaymentPage} />
         <Route component={NotFoundPage} />
       </Switch>
       <FooterComp />
@@ -97,6 +99,10 @@ const AdminPage = () => {
         <Route
           path={"/product-management"}
           component={ProductManagementPage}
+        />
+        <Route
+          path={"/custom-order"}
+          component={ManagementOrderCustomPage}
         />
         <Route
           path={"/custom-product-management"}

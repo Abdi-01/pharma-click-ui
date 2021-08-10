@@ -37,7 +37,8 @@ class ProfilePage extends React.Component {
       modal: false,
       file: Profile,
       isOpen: false,
-      indexActive: 1,
+      indexActive: this.checkIndexActive(),
+      index: 1,
       iduser: 4,
     };
   }
@@ -55,6 +56,14 @@ class ProfilePage extends React.Component {
     }
   }
 
+  checkIndexActive = () =>{
+    if(this.props.location.state){
+       this.setState({indexActive:this.props.location.state.indexActive})
+    }else{
+       this.setState({indexActive:1})
+    }
+  }
+
   handleChange(event) {
     this.setState({
       file: URL.createObjectURL(event.target.files[0]),
@@ -62,6 +71,8 @@ class ProfilePage extends React.Component {
   }
 
   render() {
+    console.log('state props',this.props.location.state)
+    console.log('index active',this.state.indexActive)
     return (
       <Container className="mt-5">
         <Row>
@@ -76,7 +87,7 @@ class ProfilePage extends React.Component {
                         class="list active"
                         onClick={() => {
                           this.setState({
-                            indexActive: 1,
+                            index: 1,
                           });
                         }}
                       >
@@ -96,24 +107,7 @@ class ProfilePage extends React.Component {
                           href="#"
                           onClick={() => {
                             this.setState({
-                              indexActive: 2,
-                            });
-                          }}
-                        >
-                          <span className="icon">
-                            <FontAwesomeIcon icon={faKey} />
-                          </span>
-                          <span className="title">Security</span>
-                        </a>
-                      </li>
-                      <li class="list">
-                        <b></b>
-                        <b></b>
-                        <a
-                          href="#"
-                          onClick={() => {
-                            this.setState({
-                              indexActive: 3,
+                              index: 3,
                             });
                           }}
                         >
@@ -130,18 +124,22 @@ class ProfilePage extends React.Component {
             </Container>
           </Col>
 
-          {/* IMAGE USER */}
-          {this.state.indexActive === 1 ? (
+          {/* NAVIGATION */}
+
+          {this.props.location.state ? 
+          (<>{this.props.location.state.indexActive === 3 ?(<><TransactionPage /></>):
+            this.props.location.state.indexActive === 1 ?(<><ProfileComp /></>):(<></>)}</>):
+          (<>{this.state.index === 1 ? (
             <>
               <ProfileComp />
             </>
-          ) : this.state.indexActive === 2 ? (
+          ) : this.state.index === 2 ? (
             <></>
-          ) : (
+          ) : this.state.index === 3 &&(
             <>
               <TransactionPage />
             </>
-          )}
+          )}</>)}
         </Row>
       </Container>
     );

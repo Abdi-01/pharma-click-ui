@@ -26,8 +26,8 @@ import { faTimes, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import HTTP from "../service/HTTP";
 import CartEmpty from "../assets/images/emptyCart.jpg";
-import axios from "axios";
-import { URL_API } from "../Helper";
+import {Link,Redirect} from "react-router-dom"
+import { headers } from "../Helper";
 
 
 class CartPage extends React.Component {
@@ -47,7 +47,9 @@ class CartPage extends React.Component {
       alertAddress: false,
       alertSuccessOpen: false,
       openAlertForm: false,
-      qtyRemain: []
+      qtyRemain:[],
+      link: false,
+      tot_price:null,
     };
   }
 
@@ -55,34 +57,35 @@ class CartPage extends React.Component {
     this.props.getCity();
     const addresses = await this.getAddressDefault();
     if (addresses.length <= 0) {
-      await this.cityForm.value
-      await this.shippingCost()
-    } else {
-      const defaultAddress = addresses[0]
-      const dataShippingCost = await this.getShippingCost(defaultAddress)
-      this.setState({
-        selectedAddress: defaultAddress,
-        dataShippingCost,
-      })
+      this.shippingCost()
+    }else{
+    const defaultAddress = addresses[0]
+    const dataShippingCost = await this.getShippingCost(defaultAddress)
+    this.setState({
+      selectedAddress: defaultAddress,
+      dataShippingCost,
+    })
     }
   }
 
   onBtnSetDefault = (idaddressIn) => {
     let idaddress = idaddressIn;
-    let iduser = this.props.user.iduser;
+    const headers = {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+      },
+    };
     HTTP.patch(`/user/set-default`, {
       idaddress: idaddress,
-      iduser: iduser,
-    })
+    },headers)
       .then((res) => {
         this.props.getAddress(this.props.user.iduser);
-        this.setState({ modal: !this.state.modal });
+        this.setState({ modal: !this.state.modal, dataShippingCost: [], shippingCost: 0});
         this.shippingCost();
         this.cekPrice();
         let token = localStorage.getItem("tkn_id");
         this.props.keepLogin(token);
-        this.setState({ dataShippingCost: [], shippingCost: 0 });
-        this.getAddressDefault();
+        // this.getAddressDefault();
       })
       .catch((err) => {
         console.log(err);
@@ -119,6 +122,11 @@ class CartPage extends React.Component {
         });
       }, 3000);
     } else {
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
       HTTP.post(`/user/post-address`, {
         tag,
         recipient,
@@ -126,15 +134,21 @@ class CartPage extends React.Component {
         origin,
         address,
         postalCode,
-      })
+      },headers)
         .then((res) => {
           this.props.getAddress(this.props.user.iduser);
           this.setState({
             // modal: !this.state.modal,
-            alertAddress: !this.state.alertAddress,
+            activeFormAddress:false,
+            alertAddress: true,
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({
+              alertAddress: false,
+            });
+          }, 3000);
         })
         .catch((err) => {
           console.log(err);
@@ -143,16 +157,26 @@ class CartPage extends React.Component {
   };
 
   cekPrice = () => {
-    return this.props.user.cart.reduce(
-      (a, v) => (a = a + v.price + parseInt(this.state.shippingCost)),
+    let price = null
+    price = this.props.user.cart.reduce(
+      (a, v) => (a = a + v.price),
       0
     );
+    return price = parseInt(price) + parseInt(this.state.shippingCost)
+  };
+
+  cekPriceTotal = () => {
+    let price = null
+    price = this.props.user.cart.reduce(
+      (a, v) => (a = a + v.price),
+      0
+    );
+    return this.setState({tot_price:parseInt(price) + parseInt(this.state.shippingCost)})
   };
 
   getAddressDefault = () => {
     return HTTP.get(`/user/get-address?set_default=${1}&iduser=${this.props.user.iduser}`)
       .then((res) => {
-        console.log('address', res.data)
         return res.data
       })
       .catch((err) => {
@@ -465,7 +489,7 @@ class CartPage extends React.Component {
                       innerRef={(e) => (this.cityForm = e)}
                       id="city"
                       // innerRef={(e) => (this.originIn = e)}
-                      onChange={() => { this.shippingCost() }}
+                      onChange={()=>{this.shippingCost()}}
                       required
                     >
                       {this.props.city.map((item) => {
@@ -642,31 +666,31 @@ class CartPage extends React.Component {
   };
 
   getShippingCost = (address) => {
-    return HTTP.post(`/transaction/shipping-cost`, {
-      origin: 22,
-      destination: address.id_city_origin,
-      weight: 1000,
-    })
-      .then((res) => {
-        return res.data;
+     return HTTP.post(`/transaction/shipping-cost`, {
+        origin: 22,
+        destination: address.id_city_origin,
+        weight: 1000,
       })
-      .catch((error) => {
-        return error;
-      });
+        .then((res) => {
+          return res.data;
+        })
+        .catch((error) => {
+          return error;
+        });
   };
 
   shippingCost = () => {
-    HTTP.post(`/transaction/shipping-cost`, {
-      origin: 22,
-      destination: this.cityForm.value,
-      weight: 1000,
-    })
-      .then((res) => {
-        this.setState({ dataShippingCost: res.data })
+      HTTP.post(`/transaction/shipping-cost`, {
+        origin: 22,
+        destination: this.cityForm.value,
+        weight: 1000,
       })
-      .catch((error) => {
-        return error
-      });
+        .then((res) => {
+          this.setState({dataShippingCost: res.data})
+        })
+        .catch((error) => {
+          return error
+        });
   };
 
   printAlert = () => {
@@ -688,7 +712,7 @@ class CartPage extends React.Component {
           placement="bottom"
           isOpen={this.state.popoverOpen}
           target="Popover1"
-        // toggle={() => this.setState({ popoverOpen: !this.state.popoverOpen })}
+          // toggle={() => this.setState({ popoverOpen: !this.state.popoverOpen })}
         >
           <PopoverHeader>{this.state.popoverMessage}</PopoverHeader>
           <PopoverBody>You can't add more quantity</PopoverBody>
@@ -713,8 +737,8 @@ class CartPage extends React.Component {
       id_transaction_status: 4,
       idproduct: idProductAll,
       invoice: `PRM#CLICK${new Date().valueOf()}`,
-      id_city_origin: this.state.selectedAddress.id_city_origin,
-      id_city_destination: 22,
+      id_city_origin: 22,
+      id_city_destination: this.state.selectedAddress.id_city_origin,
       recipient: this.state.selectedAddress.recipient,
       postal_code: this.state.selectedAddress.postal_code,
       address: this.state.selectedAddress.address,
@@ -737,9 +761,25 @@ class CartPage extends React.Component {
         color: "danger",
         alertMessage: "Choose Shipping Services",
       });
-    } else {
-      axios
-        .post(URL_API + `/transaction/checkout`, data, headers)
+      setTimeout(() => {
+        this.setState({
+          alertSuccessOpen: !this.state.alertSuccessOpen,
+        });
+      }, 3000);
+    } else if(this.props.user.role !== 'user'){
+      this.setState({
+        alertSuccessOpen: !this.state.alertSuccessOpen,
+        color: "danger",
+        alertMessage: "You must login for continue checkout",
+      });
+    }else{
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .post(`/transaction/checkout`, data, headers)
         .then((res) => {
           this.props.keepLogin(token);
           if (res.data.message.includes("not enough stock")) {
@@ -749,11 +789,15 @@ class CartPage extends React.Component {
               alertMessage: res.data.message,
             });
           } else {
+            this.cekPriceTotal()
             this.setState({
               alertSuccessOpen: true,
               color: "success",
               alertMessage: res.data.message,
             });
+            setTimeout(() => {
+              this.setState({link:true})
+            }, 2000);
           }
         })
         .catch((err) => {
@@ -777,8 +821,8 @@ class CartPage extends React.Component {
       id_transaction_status: 4,
       idproduct: idProductAll,
       invoice: `PRM#CLICK${new Date().valueOf()}`,
-      id_city_origin: this.cityForm.value,
-      id_city_destination: 22,
+      id_city_origin: 22,
+      id_city_destination: this.cityForm.value,
       recipient: this.recipientForm.value,
       postal_code: parseInt(this.postalCodeForm.value),
       address: this.addressForm.value,
@@ -806,9 +850,20 @@ class CartPage extends React.Component {
         color: "danger",
         alertMessage: "Please fill out all field.",
       });
-    } else {
-      axios
-        .post(URL_API + `/transaction/checkout`, data, headers)
+    } else if(this.props.user.role !== 'user'){
+      this.setState({
+        openAlertForm: !this.state.openAlertForm,
+        color: "danger",
+        alertMessage: "You must login to continue checkout.",
+      });
+    }else{
+      const headers = {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("tkn_id")}`,
+        },
+      };
+      HTTP
+        .post(`/transaction/checkout`, data, headers)
         .then((res) => {
           this.props.keepLogin(token);
           this.setState({
@@ -816,6 +871,9 @@ class CartPage extends React.Component {
             color: "success",
             alertMessage: res.data.message,
           });
+          setTimeout(() => {
+            this.setState({link:true})
+          }, 2000);
         })
         .catch((err) => {
           console.log(err);
@@ -827,11 +885,24 @@ class CartPage extends React.Component {
     console.log("user", this.props.user);
     console.log("shipping cost", this.state.dataShippingCost);
     console.log("shipping cost5", this.state.shippingCost);
-    // console.log("selected address", this.state.selectedAddress.id_city_origin);
+    console.log("check price", this.cekPrice());
+    // console.log("selected address", this.state.selectedAddress);
     console.log("selected address", this.state.selectedAddress);
-    // console.log("cek", this.checkIdProduct());
+    console.log("link",this.state.link)
+    if(this.state.link){
+      return <Redirect push to ={{
+        pathname: "/payment", 
+        state: { 
+          total_price:this.state.tot_price,
+          phone_number:this.props.user.phone_number,
+          shipping_cost:this.state.shippingCost
+        }
+      }} style={{ textDecoration: "none" }}>
+    </Redirect>
+    }
 
     return (
+      
       <Container className="p-5" style={{ backgroundColor: "#F7F7F7" }} fluid>
         <Row>
           <Col md="12 mt-5">
@@ -933,7 +1004,7 @@ class CartPage extends React.Component {
                                     console.log("ITEM", item.cost);
                                     return (
                                       <>
-                                        {item.cost.cost.map((val, idx) => {
+                                        {item.cost.cost.map((val, index) => {
                                           return (
                                             <>
                                               <option value={val.value}>

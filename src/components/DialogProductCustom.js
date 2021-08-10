@@ -16,7 +16,7 @@ import { Dropdown } from 'primereact/dropdown';
 import { connect } from 'react-redux';
 import { getProductAction } from '../action'
 import HTTP from '../service/HTTP';
-class DialogProductCustom extends React.Component {
+class DialogProduct extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -65,7 +65,9 @@ class DialogProductCustom extends React.Component {
     }
     saveChanges = async () => {
         try {
-            let { idproduct, product_name, brand, stock, price, description, usage, dosage, indication, effect, unit, pack_price, category, netto } = this.props.productDetail
+            let { idproduct, product_name, brand, stock, price, description, usage, dosage, indication, effect, pack_price, netto } = this.props.productDetail
+            let { category, selectedUnit } = this.props
+            // console.log('selected unit', selectedUnit.name)
             let checkField = [product_name, brand, stock, price, description, usage, dosage, indication, effect]
             if (checkField.indexOf("") > -1) {
                 this.setState({ error: true })
@@ -75,9 +77,10 @@ class DialogProductCustom extends React.Component {
             } else {
                 // fumgsi edit ke API
                 let formData = new FormData()
-                let index = this.category.findIndex(item => item.name.toLowerCase() == category)
-                let idcategory = this.category[index].id
-
+                // let index = this.category.findIndex(item => item.name.toLowerCase() == category)
+                // let idcategory = this.category[index].id
+                let unit = selectedUnit.name
+                let idcategory = category.id
                 let data = { idproduct, product_name, brand, idcategory, stock, description, usage, dosage, indication, effect, netto, pack_price, unit }
                 formData.append('data', JSON.stringify(data))
                 formData.append('products', this.state.fileUpload)
@@ -102,7 +105,7 @@ class DialogProductCustom extends React.Component {
     }
 
     render() {
-        let { productDialog, productDetail, hide, stockChange, inputChange, category, unit } = this.props
+        let { productDialog, productDetail, hide, stockChange, inputChange, category, selectedUnit } = this.props
         
         const productDialogFooter = (
             <React.Fragment>
@@ -138,7 +141,7 @@ class DialogProductCustom extends React.Component {
                             </span>
                             <span className="mx-3" style={{ width: '40%' }}>
                                 <label >Unit</label>
-                                <Dropdown value={unit} options={this.unit} onChange={(e) => inputChange(e, 'unit')} optionLabel="name" placeholder="Select a Unit" />
+                                <Dropdown value={selectedUnit} options={this.unit} onChange={(e) => inputChange(e, 'unit')} optionLabel="name" placeholder="Select a Unit" />
                             </span>
                             <span style={{ width: '25%' }}>
                                 <label >Qty</label>
@@ -153,7 +156,7 @@ class DialogProductCustom extends React.Component {
                         </span>
                         <span className="ml-2" style={{ width: '50%' }}>
                             <label style={{ fontWeight: 'bold' }}>Type</label>
-                            <InputText disabled value="custom" />
+                            <InputText disabled value="pack" />
                         </span>
 
                     </div>
@@ -188,4 +191,4 @@ class DialogProductCustom extends React.Component {
         );
     }
 }
-export default connect(null, { getProductAction })(DialogProductCustom);
+export default connect(null, { getProductAction })(DialogProduct);
